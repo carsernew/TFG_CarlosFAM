@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "nombre": "Carlos",
+        "apellido": "Mart\u00ednez",
+        "fecha_nacimiento": "1990-01-15",
+        "sexo": "M",
+        "direccion": "Calle Falsa 123",
+        "telefono": "555-1234",
+        "correo": "carlos.martinez@email.com"
+    },
+    {
+        "id": 2,
+        "nombre": "Pepe",
+        "apellido": "Mart\u00ednez",
+        "fecha_nacimiento": "1990-01-15",
+        "sexo": "M",
+        "direccion": "Calle Falsa 123",
+        "telefono": "555-1234",
+        "correo": "carlos.martinez@email.com"
+    }
+]
