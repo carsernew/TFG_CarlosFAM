@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendar Cita</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_cita.css') }}">
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const fechaInput = document.getElementById('fecha');
+      const horaSelect = document.getElementById('hora');
+
+      // Deshabilitar fines de semana en el input de fecha
+      fechaInput.addEventListener('input', function () {
+        const fecha = new Date(this.value);
+        const dia = fecha.getUTCDay();
+        if (dia === 0 || dia === 6) {
+          alert("Las citas solo están disponibles de lunes a viernes.");
+          this.value = "";
+        }
+      });
+
+      // Generar opciones de hora en tramos de 15 minutos de 08:00 a 15:00
+      function generarOpcionesHora() {
+        for (let h = 8; h < 15; h++) {
+          for (let m = 0; m < 60; m += 15) {
+            const hora = h.toString().padStart(2, '0');
+            const minuto = m.toString().padStart(2, '0');
+            const option = document.createElement('option');
+            option.value = `${hora}:${minuto}`;
+            option.textContent = `${hora}:${minuto}`;
+            horaSelect.appendChild(option);
+          }
+        }
+      }
+
+      generarOpcionesHora();
+
+      // Validación final antes de enviar
+      document.querySelector("form").addEventListener("submit", function (event) {
+        const fecha = new Date(fechaInput.value);
+        const dia = fecha.getUTCDay();
+        if (dia === 0 || dia === 6) {
+          alert("Las citas solo están disponibles de lunes a viernes.");
+          event.preventDefault();
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Agendar Cita</h1>
+    <form action="/agendar_cita" method="post">
+      <label for="nombre">Wallet Address:</label>
+      <input type="text" id="nombre" name="nombre" value="{{ nombre }}" readonly required>
+
+      <label for="fecha">Fecha:</label>
+      <input type="date" id="fecha" name="fecha" required>
+
+      <label for="hora">Hora:</label>
+      <select id="hora" name="hora" required>
+        <option value="">Seleccione una hora</option>
+      </select>
+
+      <button type="submit">Agendar Cita</button>
+    </form>
+  </div>
+</body>
+</html>
+
