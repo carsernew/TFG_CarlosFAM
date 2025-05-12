@@ -1,0 +1,39 @@
+body {
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .card {
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-custom {
+    padding: 12px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+  }
+  
+  .badge-rol {
+    font-size: 1rem;
+    background-color: #007bff;
+  }
+  
+  .header {
+    background-color: #007bff;
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px;
+  }
+  
+  .footer {
+    margin-top: 40px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .logo-salud {
+    max-width: 60px;
+  }
+  
