@@ -42,18 +42,39 @@ def ver_citas():
 
     for filename in os.listdir(CITAS_JSON_DIR):
         if filename.endswith('.json'):
-            ruta = os.path.join(CITAS_JSON_DIR, filename)
+            ruta_resumen = os.path.join(CITAS_JSON_DIR, filename)
             try:
-                with open(ruta, 'r') as f:
+                # Abrir archivo resumen con Wallet y CID
+                with open(ruta_resumen, 'r') as f:
+                    resumen = json.load(f)
+                cid = resumen.get('CID')
+                if not cid:
+                    continue
+
+                # Descargar JSON completo desde IPFS
+                archivo_tmp = os.path.join(BASE_DIR, "temp_cita_ipfs.json")
+                if not descargar_json_de_ipfs(cid, archivo_tmp):
+                    print(f"No se pudo descargar JSON para CID {cid}")
+                    continue
+
+                # Leer JSON descargado
+                with open(archivo_tmp, 'r') as f:
                     data = json.load(f)
+
+                # Borrar temporal
+                os.remove(archivo_tmp)
+
+                # Buscar wallet en JSON descargado
                 if buscar_wallet_recursiva(data, direccion_wallet):
                     fecha = data.get('fecha', 'Desconocida')
                     hora = data.get('hora', 'Desconocida')
                     citas.append((filename, fecha, hora))
+
             except Exception as e:
-                print(f"Error al leer {filename}: {e}")
+                print(f"Error procesando {filename}: {e}")
 
     return render_template('ver_citas.html', citas=citas)
+
 
 
 
@@ -88,7 +109,7 @@ def agendar_cita():
     fecha = request.form['fecha']
     hora = request.form['hora']
 
-    # Leer citas existentes primero
+    # Leer citas existentes primero para validar
     citas_existentes = []
     for filename in os.listdir(CITAS_JSON_DIR):
         if filename.endswith('.json'):
@@ -100,20 +121,17 @@ def agendar_cita():
             except Exception as e:
                 print(f"Error al leer {filename}: {e}")
 
-    # Validar si ya existe una cita en la misma fecha y hora
     for cita in citas_existentes:
         if cita.get('fecha') == fecha and cita.get('hora') == hora:
             return render_template('agendar_cita.html', nombre=wallet_number,
                                    error="La fecha y hora seleccionada ya está ocupada. Por favor elige otro horario.")
 
-    # Validar formato de fecha y hora
     try:
         dt = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
     except ValueError:
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="Fecha u hora inválida.")
 
-    # Validar día y hora permitidos
     if dt.weekday() > 4:
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="Solo se pueden agendar citas de lunes a viernes.")
@@ -121,21 +139,41 @@ def agendar_cita():
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="La hora debe estar entre las 08:00 y las 14:00.")
 
-    # Guardar cita nueva
-    recorte = wallet_address[:8]
-    nombre_archivo = f"Cita_{fecha}_{hora}_{recorte}.json"
-    ruta = os.path.join(CITAS_JSON_DIR, nombre_archivo)
-
-    cita_json = {
+    # Crear el JSON completo para IPFS
+    cita_completa = {
         "nombre": nombre,
         "fecha": fecha,
         "hora": hora
     }
 
-    with open(ruta, 'w') as f:
-        json.dump(cita_json, f, indent=2)
+    # Guardar temporalmente el JSON completo para subir a IPFS
+    ruta_temp = os.path.join(CITAS_JSON_DIR, "temp_cita.json")
+    with open(ruta_temp, 'w') as f:
+        json.dump(cita_completa, f, indent=2)
 
-    return render_template("confirmacion_cita.html", archivo=nombre_archivo)
+    # Subir a IPFS y obtener CID
+    cid = subir_json_a_ipfs(ruta_temp)
+
+    # Eliminar el archivo temporal (opcional)
+    os.remove(ruta_temp)
+
+    if not cid:
+        return render_template('agendar_cita.html', nombre=wallet_number,
+                               error="Error al subir la cita a IPFS.")
+
+    # Guardar localmente solo Wallet y CID
+    resumen_cita = {
+        "wallet": wallet_address,
+        "CID": cid
+    }
+
+    nombre_archivo_resumen = f"Resumen_{wallet_address[:8]}_{fecha}_{hora}.json"
+    ruta_resumen = os.path.join(CITAS_JSON_DIR, nombre_archivo_resumen)
+
+    with open(ruta_resumen, 'w') as f:
+        json.dump(resumen_cita, f, indent=2)
+
+    return render_template("confirmacion_cita.html", archivo=nombre_archivo_resumen)
 
 
 
@@ -197,6 +235,26 @@ def descargar_json_de_ipfs(cid, nombre_archivo_salida):
     except Exception as e:
         print(f"Error IPFS: {e}")
         return False
+
+def subir_json_a_ipfs(ruta_json):
+    try:
+        with open(ruta_json, 'rb') as f:
+            files = {'file': f}
+            response = requests.post('http://127.0.0.1:5001/api/v0/add', files=files)
+            
+            if response.status_code == 200:
+                res = response.json()
+                cid = res['Hash'] 
+                print(f"Archivo '{ruta_json}' subido a IPFS. CID: {cid}")
+                return cid
+
+            else:
+                print(f"Error subiendo archivo a IPFS: {response.content}")
+                return None
+
+    except Exception as e:
+        print(f"Error subiendo archivo a IPFS: {e}")
+        return None
 
 
 if __name__ == "__main__":
