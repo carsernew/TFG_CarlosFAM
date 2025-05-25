@@ -64,8 +64,50 @@
       </select>
 
       <button type="submit">Agendar Cita</button>
+      {% if error %}
+        <p style="color: red;">{{ error }}</p>
+      {% endif %}
+
+
     </form>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.querySelector("form");
+      const hashInput = document.createElement("input");
+      hashInput.type = "hidden";
+      hashInput.name = "firma_hash";
+      form.appendChild(hashInput);
+    
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+    
+        if (typeof window.ethereum === 'undefined') {
+          alert("MetaMask no está disponible");
+          return;
+        }
+    
+        try {
+          await ethereum.request({ method: 'eth_requestAccounts' });
+          const provider = window.ethereum;
+          const signer = new ethers.BrowserProvider(provider).getSigner();
+    
+          const mensaje = "Confirmar agendamiento de cita";
+          const firma = await (await signer).signMessage(mensaje);
+    
+          hashInput.value = firma;
+          form.submit();
+        } catch (err) {
+          alert("La firma fue cancelada o falló.");
+          console.error(err);
+        }
+      });
+    });
+    </script>
+    <!-- Incluye ethers.js -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+    
 </body>
 </html>
 

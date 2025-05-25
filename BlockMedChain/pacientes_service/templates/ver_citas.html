@@ -13,7 +13,7 @@
     <div class="card shadow-sm p-4">
       <div class="text-center mb-4">
         <h2>📋 Mis Citas</h2>
-        <p class="text-muted">Consulta tus citas médicas programadas</p>
+        <p class="text-muted">Estas son tus citas médicas registradas con esta cartera</p>
       </div>
 
       {% if citas %}
@@ -21,18 +21,18 @@
           <thead class="table-light">
             <tr>
               <th>📅 Fecha</th>
-              <th>🕒 Franja Horaria</th>
+              <th>🕒 Hora</th>
               <th>🗑️ Acción</th>
             </tr>
           </thead>
           <tbody>
             {% for cita in citas %}
               <tr>
-                <td>{{ cita[0] }}</td>
                 <td>{{ cita[1] }}</td>
+                <td>{{ cita[2] }}</td>
                 <td>
                   <form action="/anular" method="POST">
-                    <input type="hidden" name="cita_id" value="{{ cita[2] }}">
+                    <input type="hidden" name="cita_id" value="{{ cita[0] }}">
                     <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>
                   </form>
                 </td>
