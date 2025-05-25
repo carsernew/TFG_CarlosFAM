@@ -1,0 +1,7 @@
+Initializing daemon...
+Kubo version: 0.18.1
+Repo version: 13
+System version: amd64/linux
+Golang version: go1.19.1
+
+Error: lock /home/carlos/.ipfs/repo.lock: someone else has the lock

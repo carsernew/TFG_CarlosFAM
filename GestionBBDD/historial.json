@@ -1,0 +1,57 @@
+{
+    "nombre": "Luis Martínez",
+    "edad": 42,
+    "sexo": "Masculino",
+    "grupo_sanguineo": "O+",
+    "alergias": ["Penicilina", "Polen"],
+    "enfermedades_cronicas": ["Hipertensión", "Asma"],
+    "medicamentos_actuales": [
+      {
+        "nombre": "Losartán",
+        "dosis": "50mg",
+        "frecuencia": "1 vez al día"
+      },
+      {
+        "nombre": "Salbutamol",
+        "dosis": "2 inhalaciones",
+        "frecuencia": "Según necesidad"
+      }
+    ],
+    "historial_citas": [
+      {
+        "fecha": "2024-11-10",
+        "motivo": "Control de presión arterial",
+        "medico": "Dra. Carmen Ruiz"
+      },
+      {
+        "fecha": "2025-01-25",
+        "motivo": "Chequeo general",
+        "medico": "Dr. Javier Gómez"
+      }
+    ],
+    "cirugias_previas": [
+      {
+        "procedimiento": "Apendicectomía",
+        "fecha": "2010-06-15",
+        "lugar": "Hospital General de Madrid"
+      }
+    ],
+    "vacunas": [
+      {
+        "nombre": "COVID-19",
+        "dosis": "3",
+        "ultima_dosis": "2023-09-12"
+      },
+      {
+        "nombre": "Influenza",
+        "dosis": "1",
+        "ultima_dosis": "2024-10-01"
+      }
+    ],
+    "contacto_emergencia": {
+      "nombre": "Laura Martínez",
+      "relacion": "Esposa",
+      "telefono": "+34 600 123 456"
+    }
+  }
+  

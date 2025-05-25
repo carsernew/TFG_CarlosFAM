@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPFS Access Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>IPFS Access Control</h1>
+
+    <!-- Conexión a MetaMask -->
+    <div>
+        <h2>Conectar a MetaMask</h2>
+        <button id="connectButton" onclick="connectToMetaMask()">Conectar</button>
+        <p>Cuenta conectada: <span id="connectedAccount">-</span></p>
+    </div>
+
+    <!-- Subir archivo a IPFS -->
+    <div>
+        <h2>Subir Archivo</h2>
+        <input type="text" id="cidInput" placeholder="Ingrese el CID del archivo">
+        <button onclick="uploadFile()">Subir Archivo</button>
+    </div>
+
+    <!-- Conceder acceso -->
+    <div>
+        <h2>Conceder Acceso</h2>
+        <input type="text" id="grantAddress" placeholder="Dirección a autorizar">
+        <input type="text" id="grantCid" placeholder="CID del archivo">
+        <button onclick="grantAccess()">Conceder Acceso</button>
+    </div>
+
+    <!-- Revocar acceso -->
+    <div>
+        <h2>Revocar Acceso</h2>
+        <input type="text" id="revokeAddress" placeholder="Dirección a revocar">
+        <input type="text" id="revokeCid" placeholder="CID del archivo">
+        <button onclick="revokeAccess()">Revocar Acceso</button>
+    </div>
+
+    <!-- Verificar acceso -->
+    <div>
+        <h2>Verificar Acceso</h2>
+        <input type="text" id="checkAddress" placeholder="Dirección a verificar">
+        <input type="text" id="checkCid" placeholder="CID del archivo">
+        <button onclick="checkAccess()">Verificar Acceso</button>
+        <p>¿Tiene acceso? <span id="accessStatus">-</span></p>
+    </div>
+
+    <!-- Descargar archivo -->
+    <div>
+        <h2>Descargar Archivo</h2>
+        <input type="text" id="downloadCid" placeholder="CID del archivo">
+        <button onclick="downloadFile()">Descargar Archivo</button>
+    </div>
+
+    <script>
+        let web3;
+        let contract;
+
+        // Dirección y ABI del contrato
+        const contractAddress = "0x4ed1a0e6ec843124ea5b5f317eab8a1de4493d49"; // Reemplázala con tu dirección
+        const contractABI = [
+            { "inputs": [{ "internalType": "string", "name": "cid", "type": "string" }], "name": "uploadFile", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [{ "internalType": "string", "name": "cid", "type": "string" }, { "internalType": "address", "name": "user", "type": "address" }], "name": "grantAccess", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [{ "internalType": "string", "name": "cid", "type": "string" }, { "internalType": "address", "name": "user", "type": "address" }], "name": "revokeAccess", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [{ "internalType": "string", "name": "cid", "type": "string" }, { "internalType": "address", "name": "user", "type": "address" }], "name": "hasAccess", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" },
+            { "inputs": [{ "internalType": "string", "name": "cid", "type": "string" }], "name": "downloadFile", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+        ];
+
+        // Conectar a MetaMask
+        async function connectToMetaMask() {
+            try {
+                if (window.ethereum) {
+                    await window.ethereum.request({ method: "eth_requestAccounts" });
+                    web3 = new Web3(window.ethereum);
+
+                    const accounts = await web3.eth.getAccounts();
+                    document.getElementById("connectedAccount").textContent = accounts[0];
+
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    console.log("Contrato conectado", contract);
+                } else {
+                    alert("MetaMask no está instalado.");
+                }
+            } catch (error) {
+                console.error("Error al conectar MetaMask:", error);
+            }
+        }
+
+        // Subir archivo
+        async function uploadFile() {
+            const cid = document.getElementById("cidInput").value;
+            if (!cid) {
+                alert("Por favor, ingresa un CID válido.");
+                return;
+            }
+
+            try {
+                const accounts = await web3.eth.getAccounts();
+                await contract.methods.uploadFile(cid).send({ from: accounts[0] });
+                alert(`Archivo subido con CID: ${cid}`);
+            } catch (error) {
+                console.error("Error al subir archivo:", error);
+            }
+        }
+
+        // Conceder acceso
+        async function grantAccess() {
+            const cid = document.getElementById("grantCid").value;
+            const address = document.getElementById("grantAddress").value;
+
+            try {
+                const accounts = await web3.eth.getAccounts();
+                await contract.methods.grantAccess(cid, address).send({ from: accounts[0] });
+                alert(`Acceso concedido a ${address} para el CID: ${cid}`);
+            } catch (error) {
+                console.error("Error al conceder acceso:", error);
+            }
+        }
+
+        // Revocar acceso
+        async function revokeAccess() {
+            const cid = document.getElementById("revokeCid").value;
+            const address = document.getElementById("revokeAddress").value;
+
+            try {
+                const accounts = await web3.eth.getAccounts();
+                await contract.methods.revokeAccess(cid, address).send({ from: accounts[0] });
+                alert(`Acceso revocado a ${address} para el CID: ${cid}`);
+            } catch (error) {
+                console.error("Error al revocar acceso:", error);
+            }
+        }
+
+        // Verificar acceso
+        async function checkAccess() {
+            const cid = document.getElementById("checkCid").value;
+            const address = document.getElementById("checkAddress").value;
+
+            try {
+                const hasAccess = await contract.methods.hasAccess(cid, address).call();
+                document.getElementById("accessStatus").textContent = hasAccess ? "Sí" : "No";
+            } catch (error) {
+                console.error("Error al verificar acceso:", error);
+            }
+        }
+
+        // Descargar archivo
+        async function downloadFile() {
+            const cid = document.getElementById("downloadCid").value;
+
+            try {
+                const accounts = await web3.eth.getAccounts();
+                await contract.methods.downloadFile(cid).send({ from: accounts[0] });
+                alert(`Archivo con CID ${cid} descargado exitosamente.`);
+            } catch (error) {
+                console.error("Error al descargar archivo:", error);
+            }
+        }
+    </script>
+</body>
+</html>
