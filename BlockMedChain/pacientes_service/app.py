@@ -10,9 +10,10 @@ app.secret_key = 'clave_secreta_muy_segura'
 JWT_SECRET = 'jwt_secret_compartido_entre_microservicios'
 SESSION_TIMEOUT = timedelta(minutes=5)
 
+# URL del microservicio de datos
+DATA_SERVICE_URL = 'http://localhost:5005'
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CITAS_JSON_DIR = os.path.join(BASE_DIR, 'citas_json')
-os.makedirs(CITAS_JSON_DIR, exist_ok=True)
 
 @app.route('/')
 def menu_pacientes():
@@ -24,59 +25,22 @@ def ver_citas():
         return redirect(url_for('auth', next='/ver_citas'))
 
     direccion_wallet = session['wallet_address']
-    citas = []
-
-    def buscar_wallet_recursiva(obj, wallet):
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                if isinstance(value, (dict, list)):
-                    if buscar_wallet_recursiva(value, wallet):
-                        return True
-                elif isinstance(value, str) and wallet.lower() in value.lower():
-                    return True
-        elif isinstance(obj, list):
-            for item in obj:
-                if buscar_wallet_recursiva(item, wallet):
-                    return True
-        return False
-
-    for filename in os.listdir(CITAS_JSON_DIR):
-        if filename.endswith('.json'):
-            ruta_resumen = os.path.join(CITAS_JSON_DIR, filename)
-            try:
-                # Abrir archivo resumen con Wallet y CID
-                with open(ruta_resumen, 'r') as f:
-                    resumen = json.load(f)
-                cid = resumen.get('CID')
-                if not cid:
-                    continue
-
-                # Descargar JSON completo desde IPFS
-                archivo_tmp = os.path.join(BASE_DIR, "temp_cita_ipfs.json")
-                if not descargar_json_de_ipfs(cid, archivo_tmp):
-                    print(f"No se pudo descargar JSON para CID {cid}")
-                    continue
-
-                # Leer JSON descargado
-                with open(archivo_tmp, 'r') as f:
-                    data = json.load(f)
-
-                # Borrar temporal
-                os.remove(archivo_tmp)
-
-                # Buscar wallet en JSON descargado
-                if buscar_wallet_recursiva(data, direccion_wallet):
-                    fecha = data.get('fecha', 'Desconocida')
-                    hora = data.get('hora', 'Desconocida')
-                    citas.append((filename, fecha, hora))
-
-            except Exception as e:
-                print(f"Error procesando {filename}: {e}")
+    
+    try:
+        # Llamar al microservicio de datos para obtener las citas
+        response = requests.get(f'{DATA_SERVICE_URL}/api/citas/wallet/{direccion_wallet}')
+        
+        if response.status_code == 200:
+            citas = response.json().get('citas', [])
+        else:
+            citas = []
+            print(f"Error obteniendo citas: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        citas = []
 
     return render_template('ver_citas.html', citas=citas)
-
-
-
 
 @app.route('/auth')
 def auth():
@@ -109,23 +73,7 @@ def agendar_cita():
     fecha = request.form['fecha']
     hora = request.form['hora']
 
-    # Leer citas existentes primero para validar
-    citas_existentes = []
-    for filename in os.listdir(CITAS_JSON_DIR):
-        if filename.endswith('.json'):
-            ruta = os.path.join(CITAS_JSON_DIR, filename)
-            try:
-                with open(ruta, 'r') as f:
-                    cita = json.load(f)
-                    citas_existentes.append(cita)
-            except Exception as e:
-                print(f"Error al leer {filename}: {e}")
-
-    for cita in citas_existentes:
-        if cita.get('fecha') == fecha and cita.get('hora') == hora:
-            return render_template('agendar_cita.html', nombre=wallet_number,
-                                   error="La fecha y hora seleccionada ya está ocupada. Por favor elige otro horario.")
-
+    # Validaciones básicas del lado del cliente
     try:
         dt = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
     except ValueError:
@@ -139,67 +87,79 @@ def agendar_cita():
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="La hora debe estar entre las 08:00 y las 14:00.")
 
-    # Crear el JSON completo para IPFS
-    cita_completa = {
+    # Datos de la cita
+    cita_data = {
+        "wallet_address": wallet_address,
         "nombre": nombre,
         "fecha": fecha,
         "hora": hora
     }
 
-    # Guardar temporalmente el JSON completo para subir a IPFS
-    ruta_temp = os.path.join(CITAS_JSON_DIR, "temp_cita.json")
-    with open(ruta_temp, 'w') as f:
-        json.dump(cita_completa, f, indent=2)
-
-    # Subir a IPFS y obtener CID
-    cid = subir_json_a_ipfs(ruta_temp)
-
-    # Eliminar el archivo temporal (opcional)
-    os.remove(ruta_temp)
-
-    if not cid:
+    try:
+        # Llamar al microservicio de datos para crear la cita
+        response = requests.post(f'{DATA_SERVICE_URL}/api/citas', json=cita_data)
+        
+        if response.status_code == 201:
+            result = response.json()
+            return render_template("confirmacion_cita.html", archivo=result.get('archivo'))
+        elif response.status_code == 409:
+            error_msg = response.json().get('error', 'Horario no disponible')
+            return render_template('agendar_cita.html', nombre=wallet_number, error=error_msg)
+        else:
+            error_msg = response.json().get('error', 'Error al crear la cita')
+            return render_template('agendar_cita.html', nombre=wallet_number, error=error_msg)
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
         return render_template('agendar_cita.html', nombre=wallet_number,
-                               error="Error al subir la cita a IPFS.")
-
-    # Guardar localmente solo Wallet y CID
-    resumen_cita = {
-        "wallet": wallet_address,
-        "CID": cid
-    }
-
-    nombre_archivo_resumen = f"Resumen_{wallet_address[:8]}_{fecha}_{hora}.json"
-    ruta_resumen = os.path.join(CITAS_JSON_DIR, nombre_archivo_resumen)
-
-    with open(ruta_resumen, 'w') as f:
-        json.dump(resumen_cita, f, indent=2)
-
-    return render_template("confirmacion_cita.html", archivo=nombre_archivo_resumen)
-
-
+                               error="Error de conexión. Inténtalo más tarde.")
 
 @app.route('/ver_historial')
 def ver_historial():
-    cid = "QmeEdvhVJ2uDe828ow5Rx2qgVM6N21ro94ze23f7hbnnps"
-    archivo_tmp = os.path.join(BASE_DIR, "historial_tmp.json")
-
-    if descargar_json_de_ipfs(cid, archivo_tmp):
-        try:
-            with open(archivo_tmp, 'r') as f:
-                datos = json.load(f)
-        except Exception as e:
-            datos = {"error": "No se pudo leer el JSON", "detalle": str(e)}
-        finally:
-            os.remove(archivo_tmp)
-    else:
-        datos = {"error": "No se pudo descargar desde IPFS"}
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_historial'))
+    
+    wallet_address = session['wallet_address']
+    
+    try:
+        # Obtener el CID del historial desde el microservicio de datos
+        response = requests.get(f'{DATA_SERVICE_URL}/api/historial/cid/{wallet_address}')
+        
+        if response.status_code == 200:
+            result = response.json()
+            cid = result.get('cid')
+            
+            if cid:
+                # Descargar el JSON directamente desde IPFS en el frontend
+                archivo_tmp = os.path.join(BASE_DIR, f"historial_tmp_{wallet_address}.json")
+                
+                if descargar_json_de_ipfs(cid, archivo_tmp):
+                    try:
+                        with open(archivo_tmp, 'r') as f:
+                            datos = json.load(f)
+                    except Exception as e:
+                        datos = {"error": "No se pudo leer el JSON", "detalle": str(e)}
+                    finally:
+                        if os.path.exists(archivo_tmp):
+                            os.remove(archivo_tmp)
+                else:
+                    datos = {"error": "No se pudo descargar desde IPFS"}
+            else:
+                datos = {"error": "CID no encontrado"}
+                
+        elif response.status_code == 404:
+            datos = {"error": "No se encontró historial médico para su cartera"}
+        else:
+            datos = {"error": "Error obteniendo información del historial"}
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        datos = {"error": "Error de conexión con el servicio de datos"}
 
     return render_template("ver_historial.html", historial=datos)
 
 @app.route('/salir_historial')
 def salir_historial():
-    temp_file = session.pop('temp_historial', None)
-    if temp_file and os.path.exists(temp_file):
-        os.remove(temp_file)
     return redirect(url_for('menu_pacientes'))
 
 @app.route('/anular', methods=['POST'])
@@ -209,18 +169,23 @@ def anular_cita():
     if not archivo:
         return "Falta el identificador de la cita.", 400
 
-    ruta = os.path.join(CITAS_JSON_DIR, archivo)
-
-    if os.path.exists(ruta):
-        try:
-            os.remove(ruta)
+    try:
+        # Llamar al microservicio de datos para eliminar la cita
+        response = requests.delete(f'{DATA_SERVICE_URL}/api/citas/{archivo}')
+        
+        if response.status_code == 200:
             return redirect(url_for('ver_citas'))
-        except Exception as e:
-            return f"No se pudo eliminar la cita: {str(e)}", 500
-    else:
-        return "Archivo de cita no encontrado.", 404
+        elif response.status_code == 404:
+            return "Cita no encontrada.", 404
+        else:
+            error_msg = response.json().get('error', 'Error al eliminar la cita')
+            return f"No se pudo eliminar la cita: {error_msg}", 500
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        return "Error de conexión. Inténtalo más tarde.", 500
 
-
+# Función auxiliar para descargar desde IPFS
 def descargar_json_de_ipfs(cid, nombre_archivo_salida):
     try:
         url = f'http://127.0.0.1:5001/api/v0/cat?arg={cid}'
@@ -235,27 +200,6 @@ def descargar_json_de_ipfs(cid, nombre_archivo_salida):
     except Exception as e:
         print(f"Error IPFS: {e}")
         return False
-
-def subir_json_a_ipfs(ruta_json):
-    try:
-        with open(ruta_json, 'rb') as f:
-            files = {'file': f}
-            response = requests.post('http://127.0.0.1:5001/api/v0/add', files=files)
-            
-            if response.status_code == 200:
-                res = response.json()
-                cid = res['Hash'] 
-                print(f"Archivo '{ruta_json}' subido a IPFS. CID: {cid}")
-                return cid
-
-            else:
-                print(f"Error subiendo archivo a IPFS: {response.content}")
-                return None
-
-    except Exception as e:
-        print(f"Error subiendo archivo a IPFS: {e}")
-        return None
-
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5004)
