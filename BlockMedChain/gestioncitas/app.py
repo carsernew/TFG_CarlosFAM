@@ -12,10 +12,16 @@ HISTORIAL_DB_FILE = os.path.join(BASE_DIR, 'historial_db.json')
 os.makedirs(CITAS_JSON_DIR, exist_ok=True)
 
 # Inicializar base de datos de historiales si no existe
+import json
+import os
+
+HISTORIAL_DB_FILE = "historial_db.json"
+
 def inicializar_historial_db():
     if not os.path.exists(HISTORIAL_DB_FILE):
+        # Usar diccionario en lugar de lista para búsquedas más rápidas
         historial_db = {
-            "0x1234567890abcdef": "QmeEdvhVJ2uDe828ow5Rx2qgVM6N21ro94ze23f7hbnnps"
+            "0xf8f4d31644538bb7a952c5dd14374024e3f87f71": "QmeEdvhVJ2uDe828ow5Rx2qgVM6N21ro94ze23f7hbnnps"
         }
         with open(HISTORIAL_DB_FILE, 'w') as f:
             json.dump(historial_db, f, indent=2)
@@ -23,13 +29,13 @@ def inicializar_historial_db():
 # Inicializar al arrancar el servicio
 inicializar_historial_db()
 
-# API para obtener el CID del historial según la cartera
 @app.route('/api/historial/cid/<wallet_address>', methods=['GET'])
 def obtener_cid_historial(wallet_address):
     try:
         with open(HISTORIAL_DB_FILE, 'r') as f:
             historial_db = json.load(f)
         
+        # Ahora sí puedes usar .get() directamente
         cid = historial_db.get(wallet_address)
         
         if cid:
@@ -43,6 +49,7 @@ def obtener_cid_historial(wallet_address):
 # API para agregar o actualizar CID de historial para una cartera
 @app.route('/api/historial/cid', methods=['POST'])
 def actualizar_cid_historial():
+    notificar_historial_a_frontend(wallet_address, cid)
     try:
         data = request.get_json()
         
