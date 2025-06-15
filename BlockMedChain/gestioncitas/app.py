@@ -149,6 +149,7 @@ def crear_cita():
         nombre = data.get('nombre')
         fecha = data.get('fecha')
         hora = data.get('hora')
+        tx_hash = request.form.get('tx_hash', '')
         
         if not all([wallet_address, nombre, fecha, hora]):
             return jsonify({"error": "Faltan campos requeridos"}), 400
@@ -184,7 +185,8 @@ def crear_cita():
         cita_completa = {
             "nombre": nombre,
             "fecha": fecha,
-            "hora": hora
+            "hora": hora,
+            "tx_hash": tx_hash
         }
 
         
@@ -201,10 +203,11 @@ def crear_cita():
 
         resumen_cita = {
             "wallet": wallet_address,
-            "CID": cid
+            "CID": cid,
+            "tx_hash": tx_hash
         }
 
-        nombre_archivo_resumen = f"Resumen_{wallet_address[:8]}_{fecha}_{hora}.json"
+        nombre_archivo_resumen = f"Cita_{wallet_address[:8]}_{fecha}_{hora}.json"
         ruta_resumen = os.path.join(CITAS_JSON_DIR, nombre_archivo_resumen)
 
         with open(ruta_resumen, 'w') as f:
