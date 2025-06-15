@@ -1,20 +1,33 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Menú Doctor</title>
+  <title>Menú Doctores - Portal Salud</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/menu_doctores.css') }}">
 </head>
-<body class="bg-light text-center">
-  <div class="container py-5">
-    <h1 class="mb-3">Portal Salud</h1>
-    <h3 class="text-success mb-4">Sesión activa como <span class="badge bg-success">Doctor</span></h3>
 
-    <div class="d-grid gap-3 col-6 mx-auto">
-      <a href="/ver_citas" class="btn btn-outline-primary btn-lg">Ver todas las citas</a>
-      <a href="/anular" class="btn btn-outline-warning btn-lg">Anular citas</a>
-      <a href="/logout" class="btn btn-outline-danger">Cerrar sesión</a>
+<body>
+  <div class="container d-flex justify-content-center align-items-center py-5">
+    <div class="card w-100" style="max-width: 500px;">
+      <div class="header text-center">
+        <h2>Portal de Salud</h2>
+        <h5>Sesión activa como Doctor</h5>
+      </div>
+
+      <div class="card-body text-center">
+        <div class="d-grid gap-3">
+          <a href="/ver_citas" class="btn btn-outline-primary btn-custom">📋 Citas de pacientes</a>
+          <a href="/agendar_cita" class="btn btn-outline-success btn-custom">📅 Agendar nueva cita</a>
+          <a href="/ver_historial" class="btn btn-outline-info btn-custom">🩺 Ver historial médico</a>
+          <a href="/logout" class="btn btn-outline-danger btn-custom">🔒 Cerrar sesión</a>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="text-center footer">
+    <p>&copy; 2025 Portal Salud. Todos los derechos reservados.</p>
   </div>
 </body>
 </html>
