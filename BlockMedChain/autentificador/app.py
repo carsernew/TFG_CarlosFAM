@@ -82,11 +82,13 @@ def conectar():
         # Guardar token en sesión
         session['auth_token'] = token
         
-        # Si el rol es paciente, redirigir automáticamente al microservicio de pacientes
         if rol == 'paciente':
             redirect_url = f"http://localhost:5004/auth?token={token}"
             return redirect(redirect_url)
-        
+        elif rol == 'doctor':
+            redirect_url = f"http://localhost:5006/auth?token={token}"
+            return redirect(redirect_url)
+
         # Para otros roles, ir al menú normal
         return redirect(url_for('menu'))
 
@@ -118,6 +120,10 @@ def elegir_rol():
             if rol_elegido == 'paciente':
                 redirect_url = f"http://localhost:5004/auth?token={token}"
                 return redirect(redirect_url)
+            elif rol_elegido == 'doctor':
+                redirect_url = f"http://localhost:5006/auth?token={token}"
+                return redirect(redirect_url)
+
             
             # Para otros roles, ir al menú normal
             return redirect(url_for('menu'))
@@ -135,6 +141,16 @@ def ir_a_pacientes():
     token = session['auth_token']
     redirect_url = f"http://localhost:5004/auth?token={token}"
     return redirect(redirect_url)
+
+@app.route('/ir_a_doctores')
+def ir_a_doctores():
+    if 'auth_token' not in session:
+        return redirect(url_for('index'))
+    
+    token = session['auth_token']
+    redirect_url = f"http://localhost:5006/auth?token={token}"
+    return redirect(redirect_url)
+
 
 # Añadir una ruta para validar token (para que otros servicios puedan verificar)
 @app.route('/validate_token', methods=['POST'])
