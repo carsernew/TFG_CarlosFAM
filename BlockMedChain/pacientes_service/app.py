@@ -12,12 +12,18 @@ SESSION_TIMEOUT = timedelta(minutes=5)
 
 # URL del microservicio de datos
 DATA_SERVICE_URL = 'http://localhost:5005'
+DATA_AUTH_URL='http://localhost:5000'
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.route('/')
 def menu_pacientes():
     return render_template('menu_pacientes.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('http://localhost:5000/')
 
 @app.route('/ver_citas', methods=['GET'])
 def ver_citas():
@@ -87,12 +93,14 @@ def agendar_cita():
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="La hora debe estar entre las 08:00 y las 14:00.")
 
+    tx_hash = request.form.get('tx_hash', '')
     # Datos de la cita
     cita_data = {
         "wallet_address": wallet_address,
         "nombre": nombre,
         "fecha": fecha,
-        "hora": hora
+        "hora": hora,
+        "tx_hash": tx_hash
     }
 
     try:

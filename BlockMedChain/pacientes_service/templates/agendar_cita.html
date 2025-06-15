@@ -75,36 +75,95 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const form = document.querySelector("form");
+      const fechaInput = document.getElementById('fecha');
+      const horaSelect = document.getElementById('hora');
+    
+      // Crear campos ocultos
       const hashInput = document.createElement("input");
       hashInput.type = "hidden";
       hashInput.name = "firma_hash";
       form.appendChild(hashInput);
     
+      const txInput = document.createElement("input");
+      txInput.type = "hidden";
+      txInput.name = "tx_hash";
+      form.appendChild(txInput);
+    
+      // Validar fecha al seleccionar
+      fechaInput.addEventListener('input', function () {
+        const fecha = new Date(this.value);
+        const dia = fecha.getUTCDay();
+        if (dia === 0 || dia === 6) {
+          alert("Las citas solo están disponibles de lunes a viernes.");
+          this.value = "";
+        }
+      });
+    
+      // Generar opciones de hora
+      function generarOpcionesHora() {
+        for (let h = 8; h < 15; h++) {
+          for (let m = 0; m < 60; m += 15) {
+            const hora = h.toString().padStart(2, '0');
+            const minuto = m.toString().padStart(2, '0');
+            const option = document.createElement('option');
+            option.value = `${hora}:${minuto}`;
+            option.textContent = `${hora}:${minuto}`;
+            horaSelect.appendChild(option);
+          }
+        }
+      }
+      generarOpcionesHora();
+    
+      // Envío del formulario con firma y contrato
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
     
-        if (typeof window.ethereum === 'undefined') {
-          alert("MetaMask no está disponible");
+        const fecha = fechaInput.value;
+        const hora = horaSelect.value;
+        if (!fecha || !hora) {
+          alert("Por favor completa fecha y hora.");
           return;
         }
     
+        if (typeof window.ethereum === 'undefined') {
+          alert("MetaMask no está disponible.");
+          return;
+        }
+    
+        const mensajeParaFirmar = `Confirmar agendamiento de cita el ${fecha} a las ${hora}`;
+        const mensajeContrato = `${fecha} - ${hora}`;
+    
         try {
-          await ethereum.request({ method: 'eth_requestAccounts' });
-          const provider = window.ethereum;
-          const signer = new ethers.BrowserProvider(provider).getSigner();
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
     
-          const mensaje = "Confirmar agendamiento de cita";
-          const firma = await (await signer).signMessage(mensaje);
-    
+          // Firmar el mensaje
+          const firma = await signer.signMessage(mensajeParaFirmar);
           hashInput.value = firma;
+    
+          // Llamar al contrato
+          const ABI = [
+            "function setMensaje(string _nuevoMensaje) public"
+          ];
+          const direccionContrato = "0xfb3de189f2991ca92f5468fc8e4120f5cc9b0849"; 
+    
+          const contrato = new ethers.Contract(direccionContrato, ABI, signer);
+          const tx = await contrato.setMensaje(mensajeContrato);
+          await tx.wait();
+          txInput.value = tx.hash;
+    
+          // Enviar el formulario normalmente
           form.submit();
+    
         } catch (err) {
-          alert("La firma fue cancelada o falló.");
+          alert("Firma o transacción cancelada.");
           console.error(err);
         }
       });
     });
     </script>
+    
     <!-- Incluye ethers.js -->
     <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
     

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_citas.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
 </head>
 <body>
 
@@ -31,8 +32,9 @@
                 <td>{{ cita[1] }}</td>
                 <td>{{ cita[2] }}</td>
                 <td>
-                  <form action="/anular" method="POST">
+                  <form class="cancelar-form" action="/anular" method="POST">
                     <input type="hidden" name="cita_id" value="{{ cita[0] }}">
+                    <input type="hidden" name="tx_hash">
                     <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>
                   </form>
                 </td>
@@ -51,6 +53,48 @@
       </div>
     </div>
   </div>
+
+  <script>
+    const contratoAddress = "0xef3a5995e6dc4344e1bfba250f9b9f779e471b10"; 
+    const contratoABI = [
+      "function setMensaje(string memory _nuevoMensaje) public",
+      "function getMensaje() public view returns (string memory)"
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const forms = document.querySelectorAll(".cancelar-form");
+
+      forms.forEach(form => {
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault(); // detener envío por ahora
+
+          if (typeof window.ethereum === 'undefined') {
+            alert("Necesitas MetaMask para continuar.");
+            return;
+          }
+
+          try {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contrato = new ethers.Contract(contratoAddress, contratoABI, signer);
+
+            const tx = await contrato.setMensaje("Eliminar Cita");
+            await tx.wait();
+
+            // Guardar hash en campo oculto
+            const hashInput = form.querySelector('input[name="tx_hash"]');
+            hashInput.value = tx.hash;
+
+            form.submit(); // enviar el formulario después de guardar el hash
+          } catch (error) {
+            console.error(error);
+            alert("Firma o transacción cancelada.");
+          }
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>
