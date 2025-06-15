@@ -5,7 +5,7 @@ contract Message {
     string public mensaje;
 
     constructor() {
-        mensaje = "Concertar Cita";
+        mensaje = "Eliminar Cita";
     }
 
     function setMensaje(string memory _nuevoMensaje) public {
