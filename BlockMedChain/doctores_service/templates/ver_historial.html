@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ver Historial Médico</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_historial.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2 class="mb-4 text-center">📋 Historial Médico</h2>
+    {% if historial %}
+      <div id="json-render">
+        {% for key, value in historial.items() %}
+          <div class="section">
+            <div class="json-key">{{ key|capitalize }}</div>
+            <div class="json-value">
+              {% if value is mapping %}
+                <ul>
+                  {% for subkey, subvalue in value.items() %}
+                    <li><strong>{{ subkey|capitalize }}:</strong> {{ subvalue }}</li>
+                  {% endfor %}
+                </ul>
+              {% elif value is iterable and not value is string %}
+                <ul>
+                  {% for item in value %}
+                    <li>
+                      {% if item is mapping %}
+                        <ul>
+                          {% for k, v in item.items() %}
+                            <li><strong>{{ k|capitalize }}:</strong> {{ v }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        {{ item }}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                {{ value }}
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-center text-muted">No se pudo cargar el historial médico.</p>
+    {% endif %}
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-secondary">Volver al Menú</a>
+    </div>
+  </div>
+</body>
+</html>
+

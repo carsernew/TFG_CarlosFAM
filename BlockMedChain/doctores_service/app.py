@@ -14,6 +14,7 @@ DATA_SERVICE_URL = 'http://localhost:5005'
 DATA_AUTH_URL='http://localhost:5000'
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIRR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @app.route('/')
 def menumedicos():
@@ -262,6 +263,92 @@ def inject_user():
         'rol_actual': session.get('rol', ''),
         'sesion_activa': 'wallet_address' in session
     }
+
+# MODIFICAR la ruta /ver_citas para guardar la wallet seleccionada
+@app.route('/ver_citas', methods=['GET'])
+def ver_citas():
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_citas'))
+    
+    # Ruta correcta basada en la estructura real
+    ruta_wallets = os.path.join(BASE_DIRR, 'autentificador', 'wallets', 'wallets_pacientes.txt')
+    lista_wallets = []
+    try:
+        with open(ruta_wallets, 'r', encoding='utf-8') as f:
+            lista_wallets = [linea.strip() for linea in f if linea.strip()]
+        print("Wallets cargadas:", lista_wallets) # <- DEBUG
+    except Exception as e:
+        print(f"Error leyendo archivo de wallets: {e}")
+        lista_wallets = []
+    
+    wallet_seleccionada = request.args.get('wallet')
+    
+    if wallet_seleccionada:
+        session['wallet_seleccionada'] = wallet_seleccionada
+        
+    
+    citas = []
+    if wallet_seleccionada:
+        try:
+            response = requests.get(f'{DATA_SERVICE_URL}/api/citas/wallet/{wallet_seleccionada}')
+            if response.status_code == 200:
+                citas = response.json().get('citas', [])
+            else:
+                print(f"Error obteniendo citas: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error conectando con servicio de datos: {e}")
+    
+    return render_template('ver_citas.html',
+                         citas=citas,
+                         wallets=lista_wallets,
+                         wallet_seleccionada=wallet_seleccionada)
+
+# MODIFICAR la ruta /ver_historial para usar la wallet seleccionada
+@app.route('/ver_historial')
+def ver_historial():
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_historial'))
+    
+    wallet_address = session.get('wallet_seleccionada', session['wallet_address'])
+    wallet_address= wallet_address.lower()
+    print(f"Usando wallet para historial: {wallet_address}") 
+    
+    try:
+        # Obtener el CID del historial desde el microservicio de datos
+        response = requests.get(f'{DATA_SERVICE_URL}/api/historial/cid/{wallet_address}')
+        if response.status_code == 200:
+            result = response.json()
+            cid = result.get('cid')
+            if cid:
+                # Descargar el JSON directamente desde IPFS en el frontend
+                archivo_tmp = os.path.join(BASE_DIR, f"historial_tmp_{wallet_address}.json")
+                if descargar_json_de_ipfs(cid, archivo_tmp):
+                    try:
+                        with open(archivo_tmp, 'r') as f:
+                            datos = json.load(f)
+                    except Exception as e:
+                        datos = {"error": "No se pudo leer el JSON", "detalle": str(e)}
+                    finally:
+                        if os.path.exists(archivo_tmp):
+                            os.remove(archivo_tmp)
+                else:
+                    datos = {"error": "No se pudo descargar desde IPFS"}
+            else:
+                datos = {"error": "CID no encontrado"}
+        elif response.status_code == 404:
+            datos = {"error": "No se encontró historial médico para esta cartera"}
+        else:
+            datos = {"error": "Error obteniendo información del historial"}
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        datos = {"error": "Error de conexión con el servicio de datos"}
+    
+    return render_template("ver_historial.html", 
+                         historial=datos, 
+                         wallet_actual=wallet_address)
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5006)

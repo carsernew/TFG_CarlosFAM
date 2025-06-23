@@ -1,0 +1,23 @@
+body {
+    padding: 2rem;
+    background-color: #f7f9fc;
+  }
+  
+  .json-key {
+    font-weight: bold;
+    color: #0d6efd;
+  }
+  
+  .json-value {
+    margin-left: 1rem;
+    color: #212529;
+  }
+  
+  .section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+  }
+  
