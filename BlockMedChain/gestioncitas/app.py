@@ -149,7 +149,7 @@ def crear_cita():
         nombre = data.get('nombre')
         fecha = data.get('fecha')
         hora = data.get('hora')
-        tx_hash = request.form.get('tx_hash', '')
+        tx_hash = data.get('tx_hash', '')
         
         if not all([wallet_address, nombre, fecha, hora]):
             return jsonify({"error": "Faltan campos requeridos"}), 400
