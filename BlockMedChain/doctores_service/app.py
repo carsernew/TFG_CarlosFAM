@@ -264,7 +264,7 @@ def inject_user():
         'sesion_activa': 'wallet_address' in session
     }
 
-# MODIFICAR la ruta /ver_citas para guardar la wallet seleccionada
+
 @app.route('/ver_citas', methods=['GET'])
 def ver_citas():
     if 'wallet_address' not in session:
@@ -303,7 +303,7 @@ def ver_citas():
                          wallets=lista_wallets,
                          wallet_seleccionada=wallet_seleccionada)
 
-# MODIFICAR la ruta /ver_historial para usar la wallet seleccionada
+
 @app.route('/ver_historial')
 def ver_historial():
     if 'wallet_address' not in session:
