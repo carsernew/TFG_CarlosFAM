@@ -5,48 +5,6 @@
   <title>Agendar Cita</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_cita.css') }}">
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const fechaInput = document.getElementById('fecha');
-      const horaSelect = document.getElementById('hora');
-
-      // Deshabilitar fines de semana en el input de fecha
-      fechaInput.addEventListener('input', function () {
-        const fecha = new Date(this.value);
-        const dia = fecha.getUTCDay();
-        if (dia === 0 || dia === 6) {
-          alert("Las citas solo están disponibles de lunes a viernes.");
-          this.value = "";
-        }
-      });
-
-      // Generar opciones de hora en tramos de 15 minutos de 08:00 a 15:00
-      function generarOpcionesHora() {
-        for (let h = 8; h < 15; h++) {
-          for (let m = 0; m < 60; m += 15) {
-            const hora = h.toString().padStart(2, '0');
-            const minuto = m.toString().padStart(2, '0');
-            const option = document.createElement('option');
-            option.value = `${hora}:${minuto}`;
-            option.textContent = `${hora}:${minuto}`;
-            horaSelect.appendChild(option);
-          }
-        }
-      }
-
-      generarOpcionesHora();
-
-      // Validación final antes de enviar
-      document.querySelector("form").addEventListener("submit", function (event) {
-        const fecha = new Date(fechaInput.value);
-        const dia = fecha.getUTCDay();
-        if (dia === 0 || dia === 6) {
-          alert("Las citas solo están disponibles de lunes a viernes.");
-          event.preventDefault();
-        }
-      });
-    });
-  </script>
 </head>
 <body>
   <div class="container">
@@ -67,29 +25,25 @@
       {% if error %}
         <p style="color: red;">{{ error }}</p>
       {% endif %}
-
-
     </form>
   </div>
+
+  <!-- Cargar ethers.js una sola vez -->
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+  
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const form = document.querySelector("form");
       const fechaInput = document.getElementById('fecha');
       const horaSelect = document.getElementById('hora');
     
-      // Crear campos ocultos
-      const hashInput = document.createElement("input");
-      hashInput.type = "hidden";
-      hashInput.name = "firma_hash";
-      form.appendChild(hashInput);
-    
+      // Crear campo oculto para el hash de la transacción
       const txInput = document.createElement("input");
       txInput.type = "hidden";
       txInput.name = "tx_hash";
       form.appendChild(txInput);
     
-      // Validar fecha al seleccionar
+      // Validar fecha al seleccionar (solo días laborables)
       fechaInput.addEventListener('input', function () {
         const fecha = new Date(this.value);
         const dia = fecha.getUTCDay();
@@ -99,7 +53,7 @@
         }
       });
     
-      // Generar opciones de hora
+      // Generar opciones de hora (8:00 AM a 2:45 PM en intervalos de 15 min)
       function generarOpcionesHora() {
         for (let h = 8; h < 15; h++) {
           for (let m = 0; m < 60; m += 15) {
@@ -114,59 +68,60 @@
       }
       generarOpcionesHora();
     
-      // Envío del formulario con firma y contrato
+      // Manejo del envío del formulario
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
     
         const fecha = fechaInput.value;
         const hora = horaSelect.value;
+        
         if (!fecha || !hora) {
           alert("Por favor completa fecha y hora.");
           return;
         }
     
+        // Verificar que MetaMask esté disponible
         if (typeof window.ethereum === 'undefined') {
-          alert("MetaMask no está disponible.");
+          alert("MetaMask no está disponible. Por favor instálalo para continuar.");
           return;
         }
     
-        const mensajeParaFirmar = `Confirmar agendamiento de cita el ${fecha} a las ${hora}`;
         const mensajeContrato = `${fecha} - ${hora}`;
     
         try {
+          // Solicitar acceso a las cuentas
           await window.ethereum.request({ method: 'eth_requestAccounts' });
           const provider = new ethers.BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
     
-          // Firmar el mensaje
-          const firma = await signer.signMessage(mensajeParaFirmar);
-          hashInput.value = firma;
-    
-          // Llamar al contrato
+          // Configuración del contrato
           const ABI = [
             "function setMensaje(string _nuevoMensaje) public"
           ];
           const direccionContrato = "0xfb3de189f2991ca92f5468fc8e4120f5cc9b0849"; 
     
+          // Crear instancia del contrato y ejecutar transacción
           const contrato = new ethers.Contract(direccionContrato, ABI, signer);
           const tx = await contrato.setMensaje(mensajeContrato);
+          
+          // Esperar confirmación de la transacción
           await tx.wait();
+          
+          // Guardar el hash de la transacción en el campo oculto
           txInput.value = tx.hash;
+
+          console.log("Hash de transacción generado:", tx.hash);
+          console.log("Valor del campo oculto tx_hash:", txInput.value);
     
-          // Enviar el formulario normalmente
+          // Enviar el formulario con el hash incluido
           form.submit();
     
         } catch (err) {
-          alert("Firma o transacción cancelada.");
-          console.error(err);
+          console.error("Error en la transacción:", err);
+          alert("Error al procesar la transacción. Por favor intenta nuevamente.");
         }
       });
     });
-    </script>
-    
-    <!-- Incluye ethers.js -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
-    
+  </script>
 </body>
 </html>
-

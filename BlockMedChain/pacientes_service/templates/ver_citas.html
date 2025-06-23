@@ -27,7 +27,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for cita in citas %}
+            {% for cita in citas|sort(attribute=1) %}
               <tr>
                 <td>{{ cita[1] }}</td>
                 <td>{{ cita[2] }}</td>

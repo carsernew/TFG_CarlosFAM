@@ -78,6 +78,8 @@ def agendar_cita():
     nombre = request.form['nombre']
     fecha = request.form['fecha']
     hora = request.form['hora']
+    tx_hash = request.form.get('tx_hash')
+
 
     # Validaciones básicas del lado del cliente
     try:
@@ -93,7 +95,6 @@ def agendar_cita():
         return render_template('agendar_cita.html', nombre=wallet_number,
                                error="La hora debe estar entre las 08:00 y las 14:00.")
 
-    tx_hash = request.form.get('tx_hash', '')
     # Datos de la cita
     cita_data = {
         "wallet_address": wallet_address,
