@@ -38,8 +38,8 @@ sudo bash install.sh
 ### Despliegue 
 
 ```bash
-	ipfs init
-	ipfs daemon
+ipfs init
+ipfs daemon
 ```
 ## 3. 📦 Instalación de paquetes necesarios
 
@@ -48,16 +48,16 @@ Instala los siguientes paquetes para que la aplicación funcione correctamente:
 ### Python
 
 ```bash
-	pip install flask
-  pip install PyJWT
-  pip install web3
+pip install flask
+pip install PyJWT
+pip install web3
 ```
 
 ### Node.js
 
 ```bash
-	npm install web3
-  npm install ethers
+npm install web3
+npm install ethers
 ```
 
 ## 4. 🔏 Configuración de autenticación
