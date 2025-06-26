@@ -1,39 +1,457 @@
+/* Variables CSS adaptadas para el sector salud */
+:root {
+  --primary-color: #0ea5e9;        /* Azul médico principal */
+  --primary-dark: #0284c7;         /* Azul médico oscuro */
+  --success-color: #22c55e;        /* Verde salud/bienestar */
+  --info-color: #06b6d4;           /* Azul cyan información */
+  --warning-color: #f59e0b;        /* Amarillo advertencia médica */
+  --danger-color: #ef4444;         /* Rojo emergencia médica */
+  --light-bg: #f8fafc;             /* Fondo claro hospitales */
+  --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  --button-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --gradient-bg: linear-gradient(135deg, #67e8f9 0%, #0ea5e9 100%);           /* Gradiente azul médico */
+  --gradient-secondary: linear-gradient(135deg, #86efac 0%, #22c55e 100%);    /* Gradiente verde salud */
+  --text-primary: #1f2937;         /* Texto principal */
+  --text-secondary: #6b7280;       /* Texto secundario */
+  --medical-teal: #14b8a6;         /* Verde azulado médico */
+  --medical-mint: #6ee7b7;         /* Verde menta */
+  --medical-blue: #3b82f6;         /* Azul confianza */
+  --medical-purple: #8b5cf6;       /* Morado ciencia */
+}
+
+/* Reset y configuración base */
+* {
+  box-sizing: border-box;
+}
+
 body {
-    background: linear-gradient(to right, #e0f7fa, #ffffff);
-    min-height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
+  background: var(--gradient-bg);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Efecto de partículas de fondo adaptado para salud */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+      radial-gradient(circle at 20% 50%, rgba(20, 184, 166, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(14, 165, 233, 0.3) 0%, transparent 50%);
+  animation: floatingBg 20s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes floatingBg {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(120deg); }
+  66% { transform: translateY(10px) rotate(240deg); }
+}
+
+/* Container principal */
+.container {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Tarjeta principal */
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  position: relative;
+  transform: translateY(0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cardSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cardSlideIn {
+  from {
+      opacity: 0;
+      transform: translateY(50px) scale(0.95);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+  }
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Header de la tarjeta con colores médicos */
+.header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: headerFloat 8s ease-in-out infinite;
+}
+
+@keyframes headerFloat {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  33% { transform: translateX(-10px) translateY(-15px) rotate(120deg); }
+  66% { transform: translateX(10px) translateY(-5px) rotate(240deg); }
+}
+
+.header h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.header h5 {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-weight: 400;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 0.5px;
+}
+
+/* Cuerpo de la tarjeta */
+.card-body {
+  padding: 2.5rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
+}
+
+/* Botones personalizados */
+.btn-custom {
+  border: 2px solid transparent;
+  border-radius: 15px;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: var(--button-shadow);
+  transform: translateY(0);
+}
+
+.btn-custom::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.5s;
+}
+
+.btn-custom:hover::before {
+  left: 100%;
+}
+
+.btn-custom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.btn-custom:active {
+  transform: translateY(-1px);
+  transition: transform 0.1s;
+}
+
+/* Estilos específicos para cada botón con colores médicos */
+.btn-outline-primary.btn-custom {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+}
+
+.btn-outline-primary.btn-custom:hover {
+  background: linear-gradient(135deg, var(--primary-dark), #0369a1);
+  box-shadow: 0 15px 35px rgba(14, 165, 233, 0.4);
+}
+
+.btn-outline-success.btn-custom {
+  background: linear-gradient(135deg, var(--success-color), #16a34a);
+  color: white;
+  border-color: var(--success-color);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+}
+
+.btn-outline-success.btn-custom:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
+}
+
+.btn-outline-info.btn-custom {
+  background: linear-gradient(135deg, var(--medical-teal), #0f766e);
+  color: white;
+  border-color: var(--medical-teal);
+  box-shadow: 0 8px 25px rgba(20, 184, 166, 0.3);
+}
+
+.btn-outline-info.btn-custom:hover {
+  background: linear-gradient(135deg, #0f766e, #134e4a);
+  box-shadow: 0 15px 35px rgba(20, 184, 166, 0.4);
+}
+
+.btn-outline-warning.btn-custom {
+  background: linear-gradient(135deg, var(--warning-color), #d97706);
+  color: white;
+  border-color: var(--warning-color);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+}
+
+.btn-outline-warning.btn-custom:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+}
+
+.btn-outline-danger.btn-custom {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  color: white;
+  border-color: var(--danger-color);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+.btn-outline-danger.btn-custom:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
+}
+
+/* Nuevos botones específicos para el sector salud */
+.btn-outline-medical.btn-custom {
+  background: linear-gradient(135deg, var(--medical-blue), #2563eb);
+  color: white;
+  border-color: var(--medical-blue);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.btn-outline-medical.btn-custom:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+}
+
+.btn-outline-wellness.btn-custom {
+  background: linear-gradient(135deg, var(--medical-mint), var(--medical-teal));
+  color: white;
+  border-color: var(--medical-mint);
+  box-shadow: 0 8px 25px rgba(110, 231, 183, 0.3);
+}
+
+.btn-outline-wellness.btn-custom:hover {
+  background: linear-gradient(135deg, var(--medical-teal), #0f766e);
+  box-shadow: 0 15px 35px rgba(110, 231, 183, 0.4);
+}
+
+.btn-outline-science.btn-custom {
+  background: linear-gradient(135deg, var(--medical-purple), #7c3aed);
+  color: white;
+  border-color: var(--medical-purple);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
+.btn-outline-science.btn-custom:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+}
+
+/* Grid de botones */
+.d-grid {
+  gap: 1.5rem !important;
+}
+
+/* Footer */
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Efectos de entrada escalonados para los botones */
+.btn-custom:nth-child(1) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both; }
+.btn-custom:nth-child(2) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both; }
+.btn-custom:nth-child(3) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both; }
+.btn-custom:nth-child(4) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both; }
+.btn-custom:nth-child(5) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both; }
+.btn-custom:nth-child(6) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both; }
+.btn-custom:nth-child(7) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.7s both; }
+.btn-custom:nth-child(8) { animation: buttonSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both; }
+
+@keyframes buttonSlideIn {
+  from {
+      opacity: 0;
+      transform: translateX(-30px) translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+      padding: 1rem !important;
   }
   
   .card {
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .btn-custom {
-    padding: 12px;
-    font-size: 1.1rem;
-    border-radius: 12px;
-  }
-  
-  .badge-rol {
-    font-size: 1rem;
-    background-color: #007bff;
+      margin: 1rem;
+      border-radius: 20px;
   }
   
   .header {
-    background-color: #007bff;
-    color: white;
-    border-radius: 12px 12px 0 0;
-    padding: 20px;
+      padding: 2rem 1.5rem;
+  }
+  
+  .header h2 {
+      font-size: 1.8rem;
+  }
+  
+  .header h5 {
+      font-size: 1rem;
+  }
+  
+  .card-body {
+      padding: 2rem 1.5rem;
+  }
+  
+  .btn-custom {
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+  }
+  
+  .d-grid {
+      gap: 1.2rem !important;
   }
   
   .footer {
-    margin-top: 40px;
-    font-size: 0.9rem;
-    color: #666;
+      position: relative;
+      margin-top: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h2 {
+      font-size: 1.6rem;
   }
   
-  .logo-salud {
-    max-width: 60px;
+  .btn-custom {
+      padding: 0.8rem 1rem;
+      font-size: 0.95rem;
   }
   
+  .card-body {
+      padding: 1.5rem 1rem;
+  }
+}
+
+/* Efectos adicionales para interactividad */
+.btn-custom:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.5);
+}
+
+/* Animación de carga inicial de la página */
+@keyframes pageLoad {
+  from {
+      opacity: 0;
+      transform: scale(0.9);
+  }
+  to {
+      opacity: 1;
+      transform: scale(1);
+  }
+}
+
+body {
+  animation: pageLoad 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+  }
+}
+
+/* Estados de hover mejorados */
+.btn-custom:hover {
+  letter-spacing: 0.5px;
+}
+
+/* Efecto de ondas al hacer clic */
+.btn-custom {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-custom:active::after {
+  width: 300px;
+  height: 300px;
+}

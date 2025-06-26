@@ -1,27 +1,270 @@
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --card-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  --hover-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  --border-radius: 20px;
+}
+
 body {
-    background: linear-gradient(to right, #f0f4f8, #ffffff);
-    font-family: 'Segoe UI', sans-serif;
-    min-height: 100vh;
+  background: linear-gradient(135deg, #a4b3f3 0%, #59eb85 50%, #cfeb83 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.main-container {
+  position: relative;
+  z-index: 1;
+}
+
+.main-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all 0.4s ease;
+  overflow: hidden;
+}
+
+.main-card:hover {
+  box-shadow: var(--hover-shadow);
+  transform: translateY(-5px);
+}
+
+.header-section {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 2rem;
+  margin: -2rem -2rem 2rem -2rem;
+  position: relative;
+}
+
+.header-section::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+}
+
+.header-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.header-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.citas-table {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  border: none;
+}
+
+.table-header {
+  background: var(--success-gradient);
+  color: white;
+}
+
+.table-header th {
+  border: none;
+  padding: 1.2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.table tbody tr {
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.table tbody tr:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  transform: scale(1.02);
+}
+
+.table tbody td {
+  padding: 1.2rem;
+  border: none;
+  vertical-align: middle;
+  font-weight: 500;
+}
+
+.fecha-cell {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  border-radius: 10px;
+  margin: 0.5rem;
+  padding: 0.8rem;
+  font-weight: 600;
+  color: #2c5aa0;
+}
+
+.hora-cell {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+  border-radius: 10px;
+  margin: 0.5rem;
+  padding: 0.8rem;
+  font-weight: 600;
+  color: #8e44ad;
+}
+
+.btn-cancelar {
+  background: var(--danger-gradient);
+  border: none;
+  border-radius: 25px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(250, 112, 154, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cancelar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-cancelar:hover::before {
+  left: 100%;
+}
+
+.btn-cancelar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(250, 112, 154, 0.4);
+}
+
+.no-citas-alert {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  border: 2px dashed rgba(79, 172, 254, 0.3);
+  border-radius: 15px;
+  color: #2c5aa0;
+  padding: 2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.no-citas-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.btn-volver {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  padding: 0.8rem 2rem;
+  font-weight: 600;
+  color: #667eea;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-volver:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  color: #5a67d8;
+}
+
+.loading-spinner {
+  display: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+.btn-cancelar.loading .loading-spinner {
+  display: inline-block;
+}
+
+.btn-cancelar.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  
-  .card {
-    border-radius: 16px;
-    max-width: 800px;
-    margin: 0 auto;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .table {
-    border-radius: 12px;
-    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .header-title {
+    font-size: 2rem;
   }
-  
-  th, td {
-    vertical-align: middle !important;
+
+  .table-responsive {
+    border-radius: 15px;
   }
-  
-  .btn-danger {
+
+  .table tbody td {
+    padding: 0.8rem 0.5rem;
     font-size: 0.9rem;
-    padding: 5px 12px;
-    border-radius: 8px;
   }
+
+  .fecha-cell, .hora-cell {
+    margin: 0.2rem;
+    padding: 0.5rem;
+  }
+}
+
   

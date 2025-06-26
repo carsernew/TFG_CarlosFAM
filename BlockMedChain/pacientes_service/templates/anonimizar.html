@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/anonimizar.css') }}">
+    <title>Anonimizar Historial Médico</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Anonimizar Historial Médico</h1>
+            <p>Selecciona las secciones que deseas mantener en la versión anonimizada</p>
+        </div>
+
+        {% if error %}
+            <div class="error">
+                <strong>Error:</strong> {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="success">
+                <strong>¡Éxito!</strong> Se ha generado una nueva versión anonimizada de su historial médico.
+            </div>
+            
+            <div class="resultado">
+                <h4>📋 Resultado de la Anonimización</h4>
+                <div class="cid-info">
+                    <strong>Nuevo CID:</strong> {{ nuevo_cid }}<br>
+                    <strong>Secciones incluidas:</strong>
+                    <div class="secciones-incluidas">
+                        {% for seccion in secciones_incluidas %}
+                            <span class="tag">{{ seccion }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if secciones %}
+            <form method="POST">
+                <input type="hidden" name="cid_original" value="{{ cid_original }}">
+                
+                <div class="form-section">
+                    <h3>📑 Secciones Disponibles</h3>
+                    
+                    <div class="select-all-controls">
+                        <button type="button" onclick="seleccionarTodas()">Seleccionar Todas</button>
+                        <button type="button" onclick="deseleccionarTodas()">Deseleccionar Todas</button>
+                    </div>
+                    
+                    <div class="secciones-grid">
+                        {% for seccion in secciones %}
+                            <div class="seccion-item" onclick="toggleSeccion('{{ seccion }}')">
+                                <div class="seccion-checkbox">
+                                    <input type="checkbox" name="secciones" value="{{ seccion }}" id="seccion_{{ loop.index }}" checked>
+                                    <label for="seccion_{{ loop.index }}">{{ seccion }}</label>
+                                </div>
+                                <div class="seccion-descripcion">
+                                    {% if datos[seccion] %}
+                                        {% if datos[seccion] is mapping %}
+                                            Contiene {{ datos[seccion].keys() | length }} campos
+                                        {% elif datos[seccion] is iterable and datos[seccion] is not string %}
+                                            Contiene {{ datos[seccion] | length }} elementos
+                                        {% else %}
+                                            Información de {{ seccion }}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary">
+                        🔒 Generar Versión Anonimizada
+                    </button>
+                    <a href="{{ url_for('menu_pacientes') }}" class="btn btn-secondary">
+                        ← Volver al Menú
+                    </a>
+                </div>
+            </form>
+        {% else %}
+            <div class="buttons">
+                <a href="{{ url_for('menu_pacientes') }}" class="btn btn-secondary">
+                    ← Volver al Menú
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleSeccion(seccion) {
+            const checkbox = document.querySelector(`input[value="${seccion}"]`);
+            const item = checkbox.closest('.seccion-item');
+            
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        }
+
+        function seleccionarTodas() {
+            const checkboxes = document.querySelectorAll('input[name="secciones"]');
+            const items = document.querySelectorAll('.seccion-item');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            items.forEach(item => {
+                item.classList.add('selected');
+            });
+        }
+
+        function deseleccionarTodas() {
+            const checkboxes = document.querySelectorAll('input[name="secciones"]');
+            const items = document.querySelectorAll('.seccion-item');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            items.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        // Inicializar el estado visual de las secciones
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[name="secciones"]');
+            checkboxes.forEach(checkbox => {
+                const item = checkbox.closest('.seccion-item');
+                if (checkbox.checked) {
+                    item.classList.add('selected');
+                }
+                
+                // Prevenir que el click en el checkbox se propague
+                checkbox.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const item = this.closest('.seccion-item');
+                    if (this.checked) {
+                        item.classList.add('selected');
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

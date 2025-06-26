@@ -28,7 +28,6 @@
     </form>
   </div>
 
-  <!-- Cargar ethers.js una sola vez -->
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
   
   <script>
@@ -43,7 +42,7 @@
       txInput.name = "tx_hash";
       form.appendChild(txInput);
     
-      // Validar fecha al seleccionar (solo días laborables)
+      // Validar fecha al seleccionar 
       fechaInput.addEventListener('input', function () {
         const fecha = new Date(this.value);
         const dia = fecha.getUTCDay();

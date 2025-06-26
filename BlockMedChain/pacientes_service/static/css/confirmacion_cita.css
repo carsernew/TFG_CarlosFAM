@@ -1,44 +1,344 @@
 body {
-    font-family: 'Inter', sans-serif;
-    background: #f3f4f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 25%, #b8e6e1 75%, #a8ddd4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón médico sutil en el fondo */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+      radial-gradient(circle at 40px 40px, rgba(0, 150, 136, 0.03) 2px, transparent 2px),
+      radial-gradient(circle at 120px 120px, rgba(46, 125, 50, 0.02) 1px, transparent 1px);
+  background-size: 160px 160px;
+  pointer-events: none;
+  z-index: -1;
+  animation: float-pattern 20s ease-in-out infinite;
+}
+
+@keyframes float-pattern {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Elementos decorativos flotantes */
+body::after {
+  content: '⚕ ❤ 🏥 💊 🩺';
+  position: fixed;
+  top: -50px;
+  left: -50px;
+  width: calc(100% + 100px);
+  height: calc(100% + 100px);
+  font-size: 2rem;
+  color: rgba(0, 150, 136, 0.03);
+  z-index: -1;
+  animation: float-symbols 30s linear infinite;
+  white-space: pre;
+  letter-spacing: 100px;
+  line-height: 200px;
+  pointer-events: none;
+}
+
+@keyframes float-symbols {
+  0% { transform: rotate(0deg) translateY(0px); }
+  100% { transform: rotate(360deg) translateY(-20px); }
+}
+
+.mensaje {
+  background: linear-gradient(145deg, #ffffff 0%, #f8ffff 100%);
+  padding: 3rem 4rem;
+  border-radius: 20px;
+  box-shadow: 
+      0 20px 60px rgba(0, 105, 92, 0.15),
+      0 8px 25px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  text-align: center;
+  position: relative;
+  max-width: 500px;
+  width: 100%;
+  border: 1px solid rgba(178, 223, 219, 0.3);
+  animation: message-entrance 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+@keyframes message-entrance {
+  0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+  }
+  100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+  }
+}
+
+/* Borde superior médico */
+.mensaje::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00695c 0%, #26a69a 50%, #4db6ac 100%);
+  border-radius: 20px 20px 0 0;
+}
+
+/* Símbolo médico decorativo */
+.mensaje::after {
+  content: '⚕';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #00695c 0%, #26a69a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 105, 92, 0.3);
+  animation: pulse-medical 2s ease-in-out infinite;
+}
+
+@keyframes pulse-medical {
+  0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 4px 15px rgba(0, 105, 92, 0.3);
+  }
+  50% { 
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 105, 92, 0.4);
+  }
+}
+
+h1 {
+  color: #00695c;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 105, 92, 0.1);
+  position: relative;
+  letter-spacing: -0.5px;
+}
+
+/* Efecto de brillo en el título */
+h1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(38, 166, 154, 0.2), transparent);
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+p {
+  color: #546e7a;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  font-weight: 400;
+  position: relative;
+}
+
+
+
+.btn-volver {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #00695c 0%, #26a69a 50%, #4db6ac 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 105, 92, 0.3);
+  letter-spacing: 0.3px;
+  min-width: 160px;
+  justify-content: center;
+}
+
+/* Efecto de brillo en el botón */
+.btn-volver::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-volver:hover::before {
+  left: 100%;
+}
+
+.btn-volver:hover {
+  background: linear-gradient(135deg, #004d40 0%, #00695c 50%, #26a69a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 105, 92, 0.4);
+}
+
+.btn-volver:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(0, 105, 92, 0.3);
+}
+
+/* Icono en el botón */
+.btn-volver::after {
+  content: '←';
+  font-size: 1.2em;
+  transition: transform 0.3s ease;
+}
+
+.btn-volver:hover::after {
+  transform: translateX(-3px);
+}
+
+/* Estados de accesibilidad */
+.btn-volver:focus {
+  outline: 2px solid #4db6ac;
+  outline-offset: 2px;
+}
+
+/* Efectos de hover en el mensaje completo */
+.mensaje:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+      0 25px 70px rgba(0, 105, 92, 0.18),
+      0 12px 30px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estados de éxito específicos */
+.mensaje.success {
+  border-left: 4px solid #4caf50;
+}
+
+.mensaje.success h1 {
+  color: #2e7d32;
+}
+
+.mensaje.success::after {
+  content: '✓';
+  background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+}
+
+/* Estados de error específicos */
+.mensaje.error {
+  border-left: 4px solid #f44336;
+}
+
+.mensaje.error h1 {
+  color: #c62828;
+}
+
+.mensaje.error::after {
+  content: '⚠';
+  background: linear-gradient(135deg, #c62828 0%, #f44336 100%);
+}
+
+/* Estados de información */
+.mensaje.info {
+  border-left: 4px solid #2196f3;
+}
+
+.mensaje.info h1 {
+  color: #1565c0;
+}
+
+.mensaje.info::after {
+  content: 'ℹ';
+  background: linear-gradient(135deg, #1565c0 0%, #2196f3 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+      padding: 15px;
   }
   
   .mensaje {
-    background: white;
-    padding: 2rem 3rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    text-align: center;
+      padding: 2rem 2.5rem;
+      border-radius: 15px;
+      max-width: 90%;
   }
   
   h1 {
-    color: #10b981;
+      font-size: 1.8rem;
   }
   
   p {
-    color: #374151;
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
   }
   
   .btn-volver {
-    padding: 0.75rem 1.5rem;
-    background-color: #3b82f6;
-    color: white;
-    font-weight: 600;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
+      padding: 0.875rem 1.75rem;
+      font-size: 0.95rem;
+      min-width: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mensaje {
+      padding: 1.5rem 2rem;
   }
   
-  .btn-volver:hover {
-    background-color: #2563eb;
+  h1 {
+      font-size: 1.6rem;
   }
   
+  .btn-volver {
+      width: 100%;
+      max-width: 250px;
+  }
+}
+
+/* Animación de entrada para pantallas pequeñas */
+@media (max-width: 768px) {
+  .mensaje {
+      animation: message-entrance-mobile 0.5s ease-out;
+  }
+}
+
+@keyframes message-entrance-mobile {
+  0% {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+  }
+  100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+  }
+}
