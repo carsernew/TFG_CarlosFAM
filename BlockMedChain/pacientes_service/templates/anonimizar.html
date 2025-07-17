@@ -31,10 +31,24 @@
                     <strong>Secciones incluidas:</strong>
                     <div class="secciones-incluidas">
                         {% for seccion in secciones_incluidas %}
-                            <span class="tag">{{ seccion }}</span>
+                        <span class="tag">{{ seccion.replace('_', ' ').title() }}</span>
                         {% endfor %}
                     </div>
                 </div>
+            </div>
+        {% endif %}
+
+        {% if success and archivo_guardado %}
+            <div class="info">
+                <h4>📁 Información de Almacenamiento</h4>
+                <p><strong>Archivo guardado como:</strong> {{ archivo_guardado }}</p>
+                <p><strong>Estado:</strong> 
+                    {% if 'Error' in archivo_guardado %}
+                        <span style="color: red;">⚠️ Error en el almacenamiento</span>
+                    {% else %}
+                        <span style="color: green;">✅ Guardado exitosamente</span>
+                    {% endif %}
+                </p>
             </div>
         {% endif %}
 
@@ -55,7 +69,8 @@
                             <div class="seccion-item" onclick="toggleSeccion('{{ seccion }}')">
                                 <div class="seccion-checkbox">
                                     <input type="checkbox" name="secciones" value="{{ seccion }}" id="seccion_{{ loop.index }}" checked>
-                                    <label for="seccion_{{ loop.index }}">{{ seccion }}</label>
+                                    <label for="seccion_{{ loop.index }}">{{ seccion.replace('_', ' ').title() }}</label>
+
                                 </div>
                                 <div class="seccion-descripcion">
                                     {% if datos[seccion] %}

@@ -295,7 +295,7 @@ def anonimizar():
             
             if not cid_original:
                 return render_template("anonimizar.html", 
-                                     error="CID original no encontrado")
+                                    error="CID original no encontrado")
             
             # Descargar el historial original
             archivo_tmp = os.path.join(BASE_DIR, f"historial_original_{wallet_address}.json")
@@ -321,19 +321,48 @@ def anonimizar():
                     nuevo_cid = subir_json_a_ipfs(archivo_anonimizado)
                     
                     if nuevo_cid:
+                        # NUEVA FUNCIONALIDAD: Guardar en microservicio 5005
+                        data_para_microservicio = {
+                            "wallet_address": wallet_address,
+                            "cid_anonimizado": nuevo_cid,
+                            "cid_original": cid_original,
+                            "secciones_incluidas": secciones_habilitadas,
+                            "fecha_anonimizacion": datetime.utcnow().isoformat()
+                        }
+                        
+                        try:
+                            # Llamar al microservicio 5005 para guardar el CID anonimizado
+                            response = requests.post(
+                                f'{DATA_SERVICE_URL}/api/historial/anonimizado',
+                                json=data_para_microservicio
+                            )
+                            
+                            if response.status_code == 201:
+                                print(f"CID anonimizado guardado exitosamente en microservicio: {nuevo_cid}")
+                                # Obtener información adicional de la respuesta
+                                resultado_guardado = response.json()
+                                archivo_guardado = resultado_guardado.get('archivo', '')
+                            else:
+                                print(f"Error guardando en microservicio: {response.status_code} - {response.text}")
+                                archivo_guardado = "Error al guardar en microservicio"
+                                
+                        except requests.exceptions.RequestException as e:
+                            print(f"Error conectando con microservicio 5005: {e}")
+                            archivo_guardado = "Error de conexión con microservicio"
+                        
                         return render_template("anonimizar.html", 
-                                             success=True,
-                                             nuevo_cid=nuevo_cid,
-                                             secciones_incluidas=secciones_habilitadas,
-                                             datos_anonimizados=datos_anonimizados)
+                                            success=True,
+                                            nuevo_cid=nuevo_cid,
+                                            secciones_incluidas=secciones_habilitadas,
+                                            archivo_guardado=archivo_guardado)
                     else:
                         return render_template("anonimizar.html", 
-                                             error="Error al subir el historial anonimizado a IPFS")
+                                            error="Error al subir el historial anonimizado a IPFS")
                         
                 except Exception as e:
                     print(f"Error procesando historial: {e}")
                     return render_template("anonimizar.html", 
-                                         error="Error al procesar el historial")
+                                        error="Error al procesar el historial")
                 finally:
                     # Limpiar archivos temporales
                     for archivo in [archivo_tmp, archivo_anonimizado]:
@@ -341,12 +370,12 @@ def anonimizar():
                             os.remove(archivo)
             else:
                 return render_template("anonimizar.html", 
-                                     error="No se pudo descargar el historial original")
+                                    error="No se pudo descargar el historial original")
                 
         except Exception as e:
             print(f"Error en proceso de anonimización: {e}")
             return render_template("anonimizar.html", 
-                                 error="Error en el proceso de anonimización")
+                                error="Error en el proceso de anonimización")
 
 
 def subir_json_a_ipfs(archivo_json):
