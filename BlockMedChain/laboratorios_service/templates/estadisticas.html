@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas Médicas - BLOCKMEDCHAIN</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estadisticas.css') }}">
+</head>
+<body>
+    <a href="/" class="back-btn">Volver al Menú</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>📊 Estadísticas Médicas</h1>
+            <p>Dashboard de Análisis - Sistema BLOCKMEDCHAIN</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card patients">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number">1,247</div>
+                <div class="stat-label">Pacientes Registrados</div>
+                <div class="stat-change positive">↗ +12% este mes</div>
+            </div>
+
+            <div class="stat-card appointments">
+                <div class="stat-icon">📅</div>
+                <div class="stat-number">834</div>
+                <div class="stat-label">Citas Programadas</div>
+                <div class="stat-change positive">↗ +8% este mes</div>
+            </div>
+
+            <div class="stat-card doctors">
+                <div class="stat-icon">👨‍⚕️</div>
+                <div class="stat-number">42</div>
+                <div class="stat-label">Médicos Activos</div>
+                <div class="stat-change positive">↗ +3 nuevos</div>
+            </div>
+
+            <div class="stat-card revenue">
+                <div class="stat-icon">💰</div>
+                <div class="stat-number">€89,420</div>
+                <div class="stat-label">Ingresos Mensuales</div>
+                <div class="stat-change positive">↗ +15% este mes</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">Citas por Semana</div>
+                <div class="bar-chart">
+                    <div class="bar" style="height: 60%;">45</div>
+                    <div class="bar" style="height: 80%;">67</div>
+                    <div class="bar" style="height: 45%;">38</div>
+                    <div class="bar" style="height: 90%;">82</div>
+                    <div class="bar" style="height: 75%;">59</div>
+                    <div class="bar" style="height: 95%;">94</div>
+                    <div class="bar" style="height: 70%;">71</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Distribución por Especialidad</div>
+                <div class="pie-chart"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Medicina General (35%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #27ae60;"></div>
+                        <span>Cardiología (25%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>Dermatología (20%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f39c12;"></div>
+                        <span>Pediatría (20%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-activity">
+            <div class="activity-title">Actividad Reciente</div>
+            <ul class="activity-list">
+                <li class="activity-item">
+                    <div class="activity-icon">📝</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Nueva cita programada - Dr. García con paciente María López</div>
+                        <div class="activity-time">Hace 15 minutos</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon">📋</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Historial médico actualizado - Paciente Juan Pérez</div>
+                        <div class="activity-time">Hace 32 minutos</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon">🔬</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Resultados de laboratorio disponibles - Paciente Ana Rodríguez</div>
+                        <div class="activity-time">Hace 1 hora</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon">👨‍⚕️</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Nuevo médico registrado - Dr. Martínez, Cardiología</div>
+                        <div class="activity-time">Hace 2 horas</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon">💊</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Prescripción médica enviada - Paciente Carlos Vega</div>
+                        <div class="activity-time">Hace 3 horas</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.stat-card, .chart-container, .recent-activity');
+            elements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 0.1}s`;
+            });
+
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(number => {
+                const target = parseInt(number.textContent.replace(/[^\d]/g, ''));
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    if (number.textContent.includes('€')) {
+                        number.textContent = '€' + Math.floor(current).toLocaleString();
+                    } else {
+                        number.textContent = Math.floor(current).toLocaleString();
+                    }
+                }, 40);
+            });
+
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => {
+                bar.addEventListener('mouseenter', function() {
+                    this.style.filter = 'brightness(1.2)';
+                });
+                bar.addEventListener('mouseleave', function() {
+                    this.style.filter = 'brightness(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

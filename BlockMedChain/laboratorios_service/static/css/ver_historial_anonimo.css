@@ -1,0 +1,151 @@
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.header h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+.header p {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 1.1em;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.historial-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.cid-info {
+    background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border-left: 4px solid #3498db;
+}
+
+.cid-display {
+    background: #ecf0f1;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.9em;
+    word-break: break-all;
+    margin-top: 10px;
+}
+
+.section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #28a745;
+}
+
+.json-key {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    text-transform: capitalize;
+}
+
+.json-value {
+    color: #34495e;
+    line-height: 1.6;
+}
+
+.json-value ul {
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.json-value li {
+    margin-bottom: 8px;
+}
+
+.json-value strong {
+    color: #2c3e50;
+}
+
+.copy-button {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.copy-button:hover {
+    background: #218838;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .nav-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .header h1 {
+        font-size: 2em;
+    }
+}

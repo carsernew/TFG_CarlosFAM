@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historiales Anónimos - Sistema Médico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/historiales_anonimos.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Historiales Médicos Anónimos</h1>
+            <p>Sistema de consulta de historiales anonimizados para investigación médica</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="btn btn-primary">🏠 Inicio</a>
+            <a href="/estadisticas" class="btn btn-secondary">📊 Estadísticas</a>
+            <a href="/logout" class="btn btn-danger">🚪 Cerrar Sesión</a>
+        </div>
+
+        <div class="historiales-container">
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-number">{{ historiales|length }}</div>
+                    <div class="stat-label">Historiales Disponibles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ historiales|selectattr('secciones_incluidas')|list|length }}</div>
+                    <div class="stat-label">Con Secciones Definidas</div>
+                </div>
+            </div>
+
+            <h2>📋 Historiales Anonimizados Disponibles</h2>
+
+            {% if historiales %}
+                <div class="historiales-grid">
+                    {% for historial in historiales %}
+                    <div class="historial-card">
+                        <div class="historial-info">
+                            <h3>📄 {{ historial.archivo }}</h3>
+
+                            <div class="info-item">
+                                <span class="info-label">Wallet Original:</span>
+                                <span class="info-value">{{ historial.wallet_original }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Fecha Anonimización:</span>
+                                <span class="info-value">
+                                    {% if historial.fecha_anonimizacion %}
+                                        {{ historial.fecha_anonimizacion[:10] }}
+                                    {% else %}
+                                        No disponible
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="cid-display">
+                                <strong>CID:</strong> {{ historial.cid_anonimizado }}
+                            </div>
+
+                            {% if historial.secciones_incluidas %}
+                                <div class="secciones-tags">
+                                    {% for seccion in historial.secciones_incluidas %}
+                                        <span class="seccion-tag">{{ seccion }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <a href="/ver_historial_anonimo/{{ historial.cid_anonimizado }}" 
+                               class="btn btn-primary" 
+                               style="width: 100%;">
+                                🔍 Ver Historial Completo
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i>📋</i>
+                    <h3>No hay historiales anónimos disponibles</h3>
+                    <p>Aún no se han anonimizado historiales médicos en el sistema.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

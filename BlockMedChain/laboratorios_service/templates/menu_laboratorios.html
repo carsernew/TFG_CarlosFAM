@@ -1,19 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Menú Laboratorio</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Médico - Menú Principal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menu_laboratorios.css') }}">
 </head>
-<body class="bg-light text-center">
-  <div class="container py-5">
-    <h1 class="mb-3">Portal Salud</h1>
-    <h3 class="text-success mb-4">Sesión activa como <span class="badge bg-success">Laboratorio</span></h3>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Sistema Médico</h1>
+            <p>Portal de Gestión Médica - Laboratorio</p>
+        </div>
 
-    <div class="d-grid gap-3 col-6 mx-auto">
-      <a href="/ver_citas" class="btn btn-outline-primary btn-lg">Consultar citas asignadas</a>
-      <a href="/logout" class="btn btn-outline-danger">Cerrar sesión</a>
+        <div class="menu-grid">
+            <a href="/historiales_anonimos" class="menu-item">
+                <div class="menu-icon">📅</div>
+                <h3>Hisoriales Anónimos</h3>
+                <p>Ver y administrar todas los historiales anonimos</p>
+            </a>
+
+            <a href="/estadisticas" class="menu-item">
+                <div class="menu-icon">📊</div>
+                <h3>Estadísticas</h3>
+                <p>Ver estadísticas generales del sistema médico</p>
+            </a>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-info">
+                <div class="status-dot"></div>
+                <span class="welcome-text">Sistema activo - BLOCKMEDCHAIN</span>
+            </div>
+            <a href="/logout" class="logout-btn">Cerrar Sesión</a>
+        </div>
     </div>
-  </div>
+
+    <div class="footer">
+      <p>&copy; 2025 BLOCKMEDCHAIN. Todos los derechos reservados.</p>
+    </div>
+    
+    <script>
+        // Animación de entrada
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    item.style.transition = 'all 0.5s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // Efecto de click (ondas)
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                const ripple = document.createElement('div');
+                ripple.classList.add('ripple-effect');
+
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+
+                this.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+    </script>
 </body>
 </html>

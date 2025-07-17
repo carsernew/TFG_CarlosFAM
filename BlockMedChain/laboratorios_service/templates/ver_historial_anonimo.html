@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial Anónimo - Sistema Médico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_historial_anonimo.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Historial Médico Anónimo</h1>
+            <p>Visualización de datos médicos anonimizados desde IPFS</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/historiales_anonimos" class="btn btn-secondary">← Volver a Historiales</a>
+            <a href="/" class="btn btn-primary">🏠 Inicio</a>
+        </div>
+
+        <div class="historial-container">
+            <div class="cid-info">
+                <h3>📋 Información del Historial</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>CID de IPFS:</strong></span>
+                    <span class="text-muted">{{ cid }}</span>
+                </div>
+                <div class="cid-display">
+                    {{ cid }}
+                    <button class="copy-button" onclick="copyToClipboard('{{ cid }}')">
+                        📋 Copiar CID
+                    </button>
+                </div>
+            </div>
+
+            {% if historial %}
+                <h2 class="mb-4 text-center">📄 Contenido del Historial</h2>
+                
+                <div id="json-render">
+                    {% for key, value in historial.items() %}
+                    <div class="section">
+                        <div class="json-key">{{ key|capitalize }}</div>
+                        <div class="json-value">
+                            {% if value is mapping %}
+                            <ul>
+                                {% for subkey, subvalue in value.items() %}
+                                <li><strong>{{ subkey|capitalize }}:</strong> {{ subvalue }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% elif value is iterable and not value is string %}
+                            <ul>
+                                {% for item in value %}
+                                <li>
+                                    {% if item is mapping %}
+                                    <ul>
+                                        {% for k, v in item.items() %}
+                                        <li><strong>{{ k|capitalize }}:</strong> {{ v }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    {{ item }}
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            {{ value }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="error-message">
+                    <h3>❌ Error al cargar el historial</h3>
+                    <p>No se pudo obtener el contenido del historial desde IPFS.</p>
+                    <p><strong>CID:</strong> {{ cid }}</p>
+                    <p>Posibles causas:</p>
+                    <ul>
+                        <li>El CID no existe en la red IPFS</li>
+                        <li>El nodo IPFS no está disponible</li>
+                        <li>Error de conectividad</li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Copiado!';
+                button.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#28a745';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Error al copiar: ', err);
+                alert('Error al copiar al portapapeles');
+            });
+        }
+    </script>
+</body>
+</html>
