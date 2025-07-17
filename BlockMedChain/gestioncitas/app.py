@@ -8,12 +8,12 @@ app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CITAS_JSON_DIR = os.path.join(BASE_DIR, 'citas_json')
+LABORATORIO_DATA_DIR = os.path.join(BASE_DIR, 'laboratorio_json')
 HISTORIAL_DB_FILE = os.path.join(BASE_DIR, 'historial_db.json')
+CONSULTAS_JSON_DIR = os.path.join(BASE_DIR, 'consultas_json')
+os.makedirs(CONSULTAS_JSON_DIR, exist_ok=True)
 os.makedirs(CITAS_JSON_DIR, exist_ok=True)
-
-# Inicializar base de datos de historiales si no existe
-import json
-import os
+os.makedirs(LABORATORIO_DATA_DIR, exist_ok=True)
 
 HISTORIAL_DB_FILE = "historial_db.json"
 
@@ -310,6 +310,333 @@ def subir_json_a_ipfs(ruta_json):
     except Exception as e:
         print(f"Error subiendo archivo a IPFS: {e}")
         return None
+
+@app.route('/api/consultas', methods=['POST'])
+def crear_consulta():
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "No se proporcionaron datos"}), 400
+            
+        # Extraer datos del formulario
+        cita_id = data.get('cita_id')
+        wallet_paciente = data.get('wallet_paciente')
+        wallet_medico = data.get('wallet_medico')
+        fecha_cita = data.get('fecha_cita')
+        hora_cita = data.get('hora_cita')
+        motivo_consulta = data.get('motivo_consulta')
+        diagnostico = data.get('diagnostico')
+        medicacion = data.get('medicacion')
+        observaciones = data.get('observaciones')
+        tx_hash = data.get('tx_hash', '')
+        fecha_consulta = data.get('fecha_consulta')
+        
+        
+        # Validar campos requeridos
+        if not all([wallet_paciente, wallet_medico, fecha_cita, hora_cita]):
+            return jsonify({"error": "Faltan campos requeridos"}), 400
+
+        # Crear objeto completo de la consulta
+        consulta_completa = {
+            "cita_id": cita_id,
+            "wallet_paciente": wallet_paciente,
+            "wallet_medico": wallet_medico,
+            "fecha_cita": fecha_cita,
+            "hora_cita": hora_cita,
+            "motivo_consulta": motivo_consulta,
+            "diagnostico": diagnostico,
+            "medicacion": medicacion,
+            "observaciones": observaciones,
+            "tx_hash": tx_hash,
+            "fecha_consulta": fecha_consulta,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        # Guardar temporalmente en archivo local
+        ruta_temp = os.path.join(CONSULTAS_JSON_DIR, "temp_consulta.json")
+        with open(ruta_temp, 'w', encoding='utf-8') as f:
+            json.dump(consulta_completa, f, indent=2, ensure_ascii=False)
+
+        # Subir archivo a IPFS y obtener CID
+        cid = subir_json_a_ipfs(ruta_temp)
+        os.remove(ruta_temp)  # Eliminar archivo temporal
+
+        if not cid:
+            return jsonify({"error": "Error al subir la consulta a IPFS"}), 500
+
+        # Crear resumen de la consulta con CID
+        resumen_consulta = {
+            "wallet_paciente": wallet_paciente,
+            "wallet_medico": wallet_medico,
+            "fecha_cita": fecha_cita,
+            "hora_cita": hora_cita,
+            "CID": cid,
+            "fecha_consulta": fecha_consulta,
+            "tx_hash": tx_hash,
+            "cita_id": cita_id
+        }
+
+        # Generar nombre único para el archivo resumen
+        # Formato: Consulta_{wallet_medico_primeros8}_{fecha}_{hora}.json
+        nombre_archivo_resumen = f"Consulta_{wallet_medico[:8]}_{fecha_cita}_{hora_cita.replace(':', '')}.json"
+        ruta_resumen = os.path.join(CONSULTAS_JSON_DIR, nombre_archivo_resumen)
+
+        # Guardar resumen localmente
+        with open(ruta_resumen, 'w', encoding='utf-8') as f:
+            json.dump(resumen_consulta, f, indent=2, ensure_ascii=False)
+
+        return jsonify({
+            "message": "Consulta creada exitosamente",
+            "archivo": nombre_archivo_resumen,
+            "cid": cid,
+            "tx_hash": tx_hash,
+            "wallet_paciente": wallet_paciente,
+            "wallet_medico": wallet_medico
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": f"Error creando consulta: {str(e)}"}), 500
+
+# API para obtener consultas de un médico específico
+@app.route('/api/consultas/medico/<wallet_medico>', methods=['GET'])
+def obtener_consultas_medico(wallet_medico):
+    try:
+        consultas = []
+        
+        for filename in os.listdir(CONSULTAS_JSON_DIR):
+            if filename.endswith('.json'):
+                ruta_resumen = os.path.join(CONSULTAS_JSON_DIR, filename)
+                try:
+                    with open(ruta_resumen, 'r', encoding='utf-8') as f:
+                        resumen = json.load(f)
+                    
+                    # Verificar si la consulta pertenece al médico
+                    if resumen.get('wallet_medico') == wallet_medico:
+                        cid = resumen.get('CID')
+                        if cid:
+                            # Descargar datos completos desde IPFS
+                            archivo_tmp = os.path.join(BASE_DIR, f"temp_consulta_{filename}")
+                            if descargar_json_de_ipfs(cid, archivo_tmp):
+                                with open(archivo_tmp, 'r', encoding='utf-8') as f:
+                                    consulta_data = json.load(f)
+                                os.remove(archivo_tmp)
+                                
+                                consultas.append({
+                                    "archivo": filename,
+                                    "resumen": resumen,
+                                    "datos": consulta_data
+                                })
+                                
+                except Exception as e:
+                    print(f"Error procesando {filename}: {e}")
+        
+        return jsonify({"consultas": consultas}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error obteniendo consultas: {str(e)}"}), 500
+
+# API para obtener consultas de un paciente específico
+@app.route('/api/consultas/paciente/<wallet_paciente>', methods=['GET'])
+def obtener_consultas_paciente(wallet_paciente):
+    try:
+        consultas = []
+        
+        for filename in os.listdir(CONSULTAS_JSON_DIR):
+            if filename.endswith('.json'):
+                ruta_resumen = os.path.join(CONSULTAS_JSON_DIR, filename)
+                try:
+                    with open(ruta_resumen, 'r', encoding='utf-8') as f:
+                        resumen = json.load(f)
+                    
+                    # Verificar si la consulta pertenece al paciente
+                    if resumen.get('wallet_paciente') == wallet_paciente:
+                        cid = resumen.get('CID')
+                        if cid:
+                            # Descargar datos completos desde IPFS
+                            archivo_tmp = os.path.join(BASE_DIR, f"temp_consulta_{filename}")
+                            if descargar_json_de_ipfs(cid, archivo_tmp):
+                                with open(archivo_tmp, 'r', encoding='utf-8') as f:
+                                    consulta_data = json.load(f)
+                                os.remove(archivo_tmp)
+                                
+                                consultas.append({
+                                    "archivo": filename,
+                                    "resumen": resumen,
+                                    "datos": consulta_data
+                                })
+                                
+                except Exception as e:
+                    print(f"Error procesando {filename}: {e}")
+        
+        return jsonify({"consultas": consultas}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error obteniendo consultas: {str(e)}"}), 500
+
+# API para obtener todas las consultas (administración)
+@app.route('/api/consultas', methods=['GET'])
+def listar_todas_consultas():
+    try:
+        consultas = []
+        
+        for filename in os.listdir(CONSULTAS_JSON_DIR):
+            if filename.endswith('.json'):
+                ruta_resumen = os.path.join(CONSULTAS_JSON_DIR, filename)
+                try:
+                    with open(ruta_resumen, 'r', encoding='utf-8') as f:
+                        resumen = json.load(f)
+                    
+                    cid = resumen.get('CID')
+                    if cid:
+                        # Descargar datos completos desde IPFS
+                        archivo_tmp = os.path.join(BASE_DIR, f"temp_consulta_{filename}")
+                        if descargar_json_de_ipfs(cid, archivo_tmp):
+                            with open(archivo_tmp, 'r', encoding='utf-8') as f:
+                                consulta_data = json.load(f)
+                            os.remove(archivo_tmp)
+                            
+                            consultas.append({
+                                "archivo": filename,
+                                "resumen": resumen,
+                                "datos": consulta_data
+                            })
+                            
+                except Exception as e:
+                    print(f"Error procesando {filename}: {e}")
+        
+        return jsonify({"consultas": consultas}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error listando consultas: {str(e)}"}), 500
+
+# API para eliminar una consulta
+@app.route('/api/consultas/<archivo>', methods=['DELETE'])
+def eliminar_consulta(archivo):
+    try:
+        ruta = os.path.join(CONSULTAS_JSON_DIR, archivo)
+        
+        if os.path.exists(ruta):
+            os.remove(ruta)
+            return jsonify({"message": "Consulta eliminada exitosamente"}), 200
+        else:
+            return jsonify({"error": "Archivo de consulta no encontrado"}), 404
+            
+    except Exception as e:
+        return jsonify({"error": f"Error eliminando consulta: {str(e)}"}), 500
+
+@app.route('/api/historial/anonimizado', methods=['POST'])
+def guardar_historial_anonimizado():
+    """
+    Guarda el CID de un historial médico anonimizado
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'wallet_address' not in data or 'cid_anonimizado' not in data:
+            return jsonify({"error": "Se requiere wallet_address y cid_anonimizado"}), 400
+            
+        wallet_address = data['wallet_address']
+        cid_anonimizado = data['cid_anonimizado']
+        cid_original = data.get('cid_original', '')
+        secciones_incluidas = data.get('secciones_incluidas', [])
+        fecha_anonimizacion = data.get('fecha_anonimizacion', datetime.utcnow().isoformat())
+        
+        # Crear objeto con la información del historial anonimizado
+        historial_anonimizado = {
+            "wallet_address": wallet_address,
+            "cid_anonimizado": cid_anonimizado,
+            "cid_original": cid_original,
+            "secciones_incluidas": secciones_incluidas,
+            "fecha_anonimizacion": fecha_anonimizacion,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        # Guardar en archivo JSON local
+        nombre_archivo = f"historial_anonimizado_{wallet_address[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        ruta_archivo = os.path.join(BASE_DIR, 'historiales_anonimizados', nombre_archivo)
+        
+        # Crear directorio si no existe
+        os.makedirs(os.path.dirname(ruta_archivo), exist_ok=True)
+        
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            json.dump(historial_anonimizado, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            "message": "Historial anonimizado guardado exitosamente",
+            "archivo": nombre_archivo,
+            "cid_anonimizado": cid_anonimizado,
+            "wallet_address": wallet_address,
+            "secciones_incluidas": secciones_incluidas
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": f"Error guardando historial anonimizado: {str(e)}"}), 500
+
+@app.route('/api/historial/anonimizado/wallet/<wallet_address>', methods=['GET'])
+def obtener_historiales_anonimizados(wallet_address):
+    """
+    Obtiene todos los historiales anonimizados de un wallet específico
+    """
+    try:
+        historiales_dir = os.path.join(BASE_DIR, 'historiales_anonimizados')
+        historiales = []
+        
+        if os.path.exists(historiales_dir):
+            for filename in os.listdir(historiales_dir):
+                if filename.endswith('.json') and wallet_address[:8] in filename:
+                    ruta_archivo = os.path.join(historiales_dir, filename)
+                    try:
+                        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                            historial_data = json.load(f)
+                        
+                        if historial_data.get('wallet_address') == wallet_address:
+                            historiales.append({
+                                "archivo": filename,
+                                "datos": historial_data
+                            })
+                    except Exception as e:
+                        print(f"Error procesando {filename}: {e}")
+        
+        return jsonify({"historiales_anonimizados": historiales}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error obteniendo historiales anonimizados: {str(e)}"}), 500
+
+@app.route('/api/historial/anonimizado/all', methods=['GET'])
+def obtener_todos_historiales_anonimizados():
+    """
+    Obtiene todos los historiales anonimizados disponibles
+    """
+    try:
+        historiales_dir = os.path.join(BASE_DIR, 'historiales_anonimizados')
+        historiales = []
+        
+        # Crear directorio si no existe
+        os.makedirs(historiales_dir, exist_ok=True)
+        
+        if os.path.exists(historiales_dir):
+            for filename in os.listdir(historiales_dir):
+                if filename.endswith('.json'):
+                    ruta_archivo = os.path.join(historiales_dir, filename)
+                    try:
+                        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                            historial_data = json.load(f)
+                        
+                        historiales.append({
+                            "archivo": filename,
+                            "cid_anonimizado": historial_data.get('cid_anonimizado'),
+                            "fecha_anonimizacion": historial_data.get('fecha_anonimizacion'),
+                            "secciones_incluidas": historial_data.get('secciones_incluidas', []),
+                            "wallet_original": historial_data.get('wallet_address', 'N/A')[:8] + '...' if historial_data.get('wallet_address') else 'N/A'
+                        })
+                    except Exception as e:
+                        print(f"Error procesando {filename}: {e}")
+        
+        return jsonify({"historiales_anonimizados": historiales}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error obteniendo historiales anónimos: {str(e)}"}), 500
 
 # Endpoint de salud del servicio
 @app.route('/health', methods=['GET'])

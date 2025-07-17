@@ -1,0 +1,10 @@
+{
+  "wallet_paciente": "0xf8f4D31644538bB7A952C5dd14374024E3F87F71",
+  "wallet_medico": "0xf8f4d31644538bb7a952c5dd14374024e3f87f71",
+  "fecha_cita": "2025-06-30",
+  "hora_cita": "08:30",
+  "CID": "QmP86SYqjHHvXK4RRvyYmLVxHZ639sA1jRpHtN4f47zhHz",
+  "fecha_consulta": "2025-07-17 10:56:35",
+  "tx_hash": "0x4b1f54bfdaca2220a0b3f56dd2fae25f07c7257c1b63274c937672af32b11dda",
+  "cita_id": "Cita_0xf8f4d3_2025-06-30_08:30.json"
+}
