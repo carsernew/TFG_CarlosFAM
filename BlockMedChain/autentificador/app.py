@@ -88,6 +88,9 @@ def conectar():
         elif rol == 'doctor':
             redirect_url = f"http://localhost:5006/auth?token={token}"
             return redirect(redirect_url)
+        elif rol == 'laboratorio':
+            redirect_url = f"http://localhost:5007/auth?token={token}"
+            return redirect(redirect_url)
 
         # Para otros roles, ir al menú normal
         return redirect(url_for('menu'))
@@ -123,6 +126,9 @@ def elegir_rol():
             elif rol_elegido == 'doctor':
                 redirect_url = f"http://localhost:5006/auth?token={token}"
                 return redirect(redirect_url)
+            elif rol_elegido == 'laboratorio':
+                redirect_url = f"http://localhost:5007/auth?token={token}"
+                return redirect(redirect_url)
 
             
             # Para otros roles, ir al menú normal
@@ -149,6 +155,15 @@ def ir_a_doctores():
     
     token = session['auth_token']
     redirect_url = f"http://localhost:5006/auth?token={token}"
+    return redirect(redirect_url)
+
+@app.route('/ir_a_laboratorio')
+def ir_a_laboratorio():  # ← CORREGIDO: Nombre de función correcto
+    if 'auth_token' not in session:
+        return redirect(url_for('index'))
+    
+    token = session['auth_token']
+    redirect_url = f"http://localhost:5007/auth?token={token}"
     return redirect(redirect_url)
 
 
