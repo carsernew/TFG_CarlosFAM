@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Consulta - Portal Salud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/consulta.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+</head>
+<body style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;">
+    <div class="container py-5">
+        <!-- Información del Paciente -->
+        <div class="patient-info">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="mb-2">👨‍⚕️ Nueva Consulta Médica</h3>
+                    <p class="mb-2"><strong>Paciente:</strong> {{ cita.wallet_address[:6] }}...{{ cita.wallet_address[-4:] }}</p>
+                    <p class="mb-2"><strong>Fecha:</strong> {{ cita.fecha }}</p>
+                    <p class="mb-0"><strong>Hora:</strong> {{ cita.hora }}</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="badge bg-light text-dark p-2 fs-6">
+                        <i class="fas fa-user-md"></i> Consulta Activa
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de Consulta -->
+        <form action="{{ url_for('guardar_consulta') }}" method="POST" id="consultaForm">
+            <input type="hidden" name="tx_hash" id="txHashInput">
+            <input type="hidden" name="cita_id" value="{{ cita.id }}">
+            
+            <div class="form-section">
+                <h4 class="section-title">📋 Motivo de Consulta</h4>
+                <div class="mb-3">
+                    <label for="motivo_consulta" class="form-label">Motivo de la consulta <span class="required">*</span></label>
+                    <textarea class="form-control" id="motivo_consulta" name="motivo_consulta" rows="3" required></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="section-title">🔍 Diagnóstico</h4>
+                <div class="mb-3">
+                    <label for="diagnostico" class="form-label">Diagnóstico médico <span class="required">*</span></label>
+                    <textarea class="form-control" id="diagnostico" name="diagnostico" rows="4" required></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="section-title">💊 Medicación</h4>
+                <div class="mb-3">
+                    <label for="medicacion" class="form-label">Medicación prescrita</label>
+                    <textarea class="form-control" id="medicacion" name="medicacion" rows="4"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4 class="section-title">📝 Observaciones</h4>
+                <div class="mb-3">
+                    <label for="observaciones" class="form-label">Observaciones adicionales</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a href="{{ url_for('ver_citas') }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg" id="guardarBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="spinner" role="status" aria-hidden="true"></span>
+                    <span id="btnText">Guardar Consulta</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script>
+        const contratoAddress = "0x6e2a678b2fa514e0067c985950560ec003e5ea5b";
+        const contratoABI = [
+            "function setMensaje(string memory _nuevoMensaje) public",
+            "function getMensaje() public view returns (string memory)"
+        ];
+
+        document.getElementById('consultaForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevenir envío inicial
+            
+            const motivo = document.getElementById('motivo_consulta').value.trim();
+            const diagnostico = document.getElementById('diagnostico').value.trim();
+            const medicacion = document.getElementById('medicacion').value.trim();
+            const observaciones = document.getElementById('observaciones').value.trim();
+            
+            // Validaciones básicas
+            if (!motivo || !diagnostico) {
+                alert('Complete los campos obligatorios (Motivo de consulta y Diagnóstico)');
+                return false;
+            }
+            
+            if (!confirm('¿Está seguro de guardar esta consulta? Se registrará en la blockchain.')) {
+                return false;
+            }
+
+            // Verificar MetaMask
+            if (typeof window.ethereum === 'undefined') {
+                alert("Necesitas MetaMask para continuar.");
+                return;
+            }
+
+            // Mostrar spinner y deshabilitar botón
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+            const guardarBtn = document.getElementById('guardarBtn');
+            
+            spinner.classList.remove('d-none');
+            btnText.textContent = 'Procesando...';
+            guardarBtn.disabled = true;
+
+            try {
+                // Solicitar conexión a MetaMask
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const contrato = new ethers.Contract(contratoAddress, contratoABI, signer);
+
+                // Crear mensaje con datos de la consulta
+                const mensajeConsulta = `Nueva Consulta - Motivo: ${motivo.substring(0, 50)}${motivo.length > 50 ? '...' : ''} - Diagnóstico: ${diagnostico.substring(0, 50)}${diagnostico.length > 50 ? '...' : ''}`;
+                
+                // Ejecutar transacción
+                const tx = await contrato.setMensaje(mensajeConsulta);
+                btnText.textContent = 'Esperando confirmación...';
+                
+                // Esperar confirmación
+                await tx.wait();
+                
+                // Guardar hash en campo oculto
+                document.getElementById('txHashInput').value = tx.hash;
+                
+                // Ejecutar anulación de cita
+                await anularCita(tx.hash);
+                
+                // Enviar formulario
+                this.submit();
+                
+            } catch (error) {
+                console.error('Error en la transacción:', error);
+                
+                // Restaurar botón
+                spinner.classList.add('d-none');
+                btnText.textContent = 'Guardar Consulta';
+                guardarBtn.disabled = false;
+                
+                if (error.code === 4001) {
+                    alert('Transacción cancelada por el usuario.');
+                } else {
+                    alert('Error al procesar la transacción: ' + error.message);
+                }
+            }
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        });
+
+        // Función para anular cita
+        async function anularCita(txHash) {
+            try {
+                const formData = new FormData();
+                formData.append('cita_id', document.querySelector('input[name="cita_id"]').value);
+                formData.append('tx_hash', txHash);
+
+                const response = await fetch('/anular', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    console.error('Error al anular la cita:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la anulación:', error);
+            }
+        }
+    </script>
+</body>
+</html>

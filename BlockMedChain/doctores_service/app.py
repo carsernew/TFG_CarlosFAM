@@ -348,7 +348,302 @@ def ver_historial():
                          wallet_actual=wallet_address)
 
 
+@app.route('/nueva_consulta', methods=['POST'])
+def nueva_consulta():
+    """Iniciar una nueva consulta médica"""
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_citas'))
+    
+    cita_id = request.form.get('cita_id')
+    if not cita_id:
+        print("Error: No se proporcionó cita_id")
+        return redirect(url_for('ver_citas'))
+    
+    # Obtener la wallet seleccionada de la sesión
+    wallet_seleccionada = session.get('wallet_seleccionada')
+    if not wallet_seleccionada:
+        print("Error: No hay wallet seleccionada en la sesión")
+        return redirect(url_for('ver_citas'))
+    
+    print(f"Buscando cita ID: {cita_id} para wallet: {wallet_seleccionada}")
+    
+    # Obtener todas las citas de la wallet para encontrar la específica
+    try:
+        response = requests.get(f'{DATA_SERVICE_URL}/api/citas/wallet/{wallet_seleccionada}')
+        if response.status_code == 200:
+            citas = response.json().get('citas', [])
+            print(f"Citas encontradas: {citas}")
+            
+            # Buscar la cita específica por ID
+            cita_encontrada = None
+            for cita in citas:
+                print(f"Comparando: {cita[0]} con {cita_id}")
+                if str(cita[0]) == str(cita_id):  # cita[0] es el ID
+                    cita_encontrada = {
+                        'id': cita[0],
+                        'fecha': cita[1],
+                        'hora': cita[2],
+                        'wallet_address': wallet_seleccionada
+                    }
+                    break
+            
+            if cita_encontrada:
+                print(f"Cita encontrada: {cita_encontrada}")
+                # Guardar información de la cita en la sesión
+                session['cita_actual'] = cita_encontrada
+                return redirect(url_for('formulario_consulta'))
+            else:
+                print("Error: No se encontró la cita especificada")
+                return "Error: No se encontró la cita especificada", 404
+        else:
+            print(f"Error obteniendo citas: {response.status_code}")
+            return "Error: No se pudieron obtener las citas", 500
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        return "Error de conexión", 500
 
+@app.route('/formulario_consulta')
+def formulario_consulta():
+    """Mostrar formulario para llenar datos de la consulta"""
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_citas'))
+    
+    cita_actual = session.get('cita_actual')
+    if not cita_actual:
+        print("Error: No hay cita actual en la sesión")
+        return redirect(url_for('ver_citas'))
+    
+    print(f"Mostrando formulario para cita: {cita_actual}")
+    return render_template('consulta.html', cita=cita_actual)
+
+# Reemplazar el endpoint /guardar_consulta en el microservicio de médicos (puerto 5006)
+
+@app.route('/guardar_consulta', methods=['POST'])
+def guardar_consulta():
+    """Guardar los datos de la consulta médica"""
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/ver_citas'))
+    
+    cita_actual = session.get('cita_actual')
+    if not cita_actual:
+        return redirect(url_for('ver_citas'))
+    
+    # Obtener datos del formulario
+    consulta_data = {
+        'cita_id': cita_actual.get('id'),
+        'wallet_paciente': cita_actual.get('wallet_address'),
+        'wallet_medico': session['wallet_address'],
+        'fecha_cita': cita_actual.get('fecha'),
+        'hora_cita': cita_actual.get('hora'),
+        'motivo_consulta': request.form.get('motivo_consulta'),
+        'diagnostico': request.form.get('diagnostico'),
+        'medicacion': request.form.get('medicacion'),
+        'observaciones': request.form.get('observaciones'),
+        'tx_hash': request.form.get('tx_hash'),
+        'fecha_consulta': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    print(f"Datos de consulta a guardar: {consulta_data}")
+    
+    try:
+        # Llamar al microservicio de datos para crear la consulta
+        response = requests.post(f'{DATA_SERVICE_URL}/api/consultas', json=consulta_data)
+        
+        if response.status_code == 201:
+            result = response.json()
+            print(f"Consulta guardada exitosamente: {result}")
+            
+            # Limpiar sesión
+            session.pop('cita_actual', None)
+            
+            # Redirigir con mensaje de éxito
+            return render_template('confirmacion_consulta.html', 
+                                 resultado=result,
+                                 consulta=consulta_data)
+            
+        elif response.status_code == 400:
+            error_msg = response.json().get('error', 'Error en los datos proporcionados')
+            print(f"Error en datos: {error_msg}")
+            return render_template('consulta.html', 
+                                 cita=cita_actual, 
+                                 error=error_msg)
+        else:
+            error_msg = response.json().get('error', 'Error al crear la consulta')
+            print(f"Error del servidor: {response.status_code} - {error_msg}")
+            return render_template('consulta.html', 
+                                 cita=cita_actual, 
+                                 error=error_msg)
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        return render_template('consulta.html', 
+                             cita=cita_actual,
+                             error="Error de conexión. Inténtalo más tarde.")
+
+# Nuevo endpoint para ver consultas realizadas por el médico
+@app.route('/mis_consultas')
+def ver_mis_consultas():
+    """Ver consultas realizadas por el médico actual"""
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/mis_consultas'))
+    
+    wallet_medico = session['wallet_address']
+    
+    try:
+        # Obtener consultas del médico desde el microservicio de datos
+        response = requests.get(f'{DATA_SERVICE_URL}/api/consultas/medico/{wallet_medico}')
+        
+        if response.status_code == 200:
+            consultas = response.json().get('consultas', [])
+            
+            # Procesar las consultas para mostrar información adicional
+            for consulta in consultas:
+                datos = consulta.get('datos', {})
+                
+                # Formatear fechas
+                try:
+                    fecha_obj = datetime.strptime(f"{datos.get('fecha_cita')} {datos.get('hora_cita')}", "%Y-%m-%d %H:%M")
+                    consulta['fecha_formateada'] = fecha_obj.strftime("%d/%m/%Y")
+                    consulta['hora_formateada'] = fecha_obj.strftime("%H:%M")
+                except:
+                    consulta['fecha_formateada'] = datos.get('fecha_cita', 'N/A')
+                    consulta['hora_formateada'] = datos.get('hora_cita', 'N/A')
+                
+                # Formatear wallet del paciente
+                wallet_paciente = datos.get('wallet_paciente', '')
+                if len(wallet_paciente) > 10:
+                    consulta['wallet_paciente_corta'] = wallet_paciente[:6] + '...' + wallet_paciente[-4:]
+                else:
+                    consulta['wallet_paciente_corta'] = wallet_paciente
+                    
+        else:
+            consultas = []
+            print(f"Error obteniendo consultas: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        consultas = []
+
+    return render_template('mis_consultas.html', 
+                         consultas=consultas,
+                         wallet_medico=wallet_medico)
+
+# Endpoint para ver detalle de una consulta específica
+@app.route('/consulta/<archivo>')
+def ver_detalle_consulta(archivo):
+    """Ver detalle completo de una consulta específica"""
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next=f'/consulta/{archivo}'))
+    
+    try:
+        # Obtener todas las consultas y buscar la específica
+        wallet_medico = session['wallet_address']
+        response = requests.get(f'{DATA_SERVICE_URL}/api/consultas/medico/{wallet_medico}')
+        
+        if response.status_code == 200:
+            consultas = response.json().get('consultas', [])
+            
+            # Buscar la consulta específica
+            consulta_encontrada = None
+            for consulta in consultas:
+                if consulta.get('archivo') == archivo:
+                    consulta_encontrada = consulta
+                    break
+            
+            if consulta_encontrada:
+                datos = consulta_encontrada.get('datos', {})
+                resumen = consulta_encontrada.get('resumen', {})
+                
+                # Formatear información adicional
+                wallet_paciente = datos.get('wallet_paciente', '')
+                if len(wallet_paciente) > 10:
+                    datos['wallet_paciente_corta'] = wallet_paciente[:6] + '...' + wallet_paciente[-4:]
+                else:
+                    datos['wallet_paciente_corta'] = wallet_paciente
+                
+                return render_template('detalle_consulta.html', 
+                                     consulta=datos,
+                                     resumen=resumen,
+                                     archivo=archivo)
+            else:
+                return "Consulta no encontrada", 404
+                
+        else:
+            return "Error obteniendo consultas", 500
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        return "Error de conexión", 500
+
+@app.route('/anular', methods=['POST'])
+def anular_cita():
+    archivo = request.form.get('cita_id')
+
+    if not archivo:
+        return "Falta el identificador de la cita.", 400
+
+    try:
+        # Llamar al microservicio de datos para eliminar la cita
+        response = requests.delete(f'{DATA_SERVICE_URL}/api/citas/{archivo}')
+        
+        if response.status_code == 200:
+            return redirect(url_for('ver_citas'))
+        elif response.status_code == 404:
+            return "Cita no encontrada.", 404
+        else:
+            error_msg = response.json().get('error', 'Error al eliminar la cita')
+            return f"No se pudo eliminar la cita: {error_msg}", 500
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        return "Error de conexión. Inténtalo más tarde.", 500
+
+@app.route('/historial_consultas', methods=['GET'])
+def historial_consultas():
+    if 'wallet_address' not in session:
+        return redirect(url_for('auth', next='/historial_consultas'))
+
+    wallet_medico = session['wallet_address']
+    
+    try:
+        # Llamar al microservicio de datos para obtener las consultas del médico
+        response = requests.get(f'{DATA_SERVICE_URL}/api/consultas/medico/{wallet_medico}')
+        
+        if response.status_code == 200:
+            consultas = response.json().get('consultas', [])
+            
+            # Procesar las consultas para añadir información adicional
+            for consulta in consultas:
+                datos = consulta.get('datos', {})
+                
+                # Formatear fechas si existen
+                try:
+                    if datos.get('fecha_cita') and datos.get('hora_cita'):
+                        fecha_obj = datetime.strptime(f"{datos['fecha_cita']} {datos['hora_cita']}", "%Y-%m-%d %H:%M")
+                        consulta['fecha_formateada'] = fecha_obj.strftime("%d/%m/%Y")
+                        consulta['hora_formateada'] = fecha_obj.strftime("%H:%M")
+                except:
+                    consulta['fecha_formateada'] = datos.get('fecha_cita', 'N/A')
+                    consulta['hora_formateada'] = datos.get('hora_cita', 'N/A')
+                
+                # Formatear wallet del paciente
+                wallet_paciente = datos.get('wallet_paciente', '')
+                if len(wallet_paciente) > 10:
+                    consulta['wallet_paciente_corta'] = wallet_paciente[:6] + '...' + wallet_paciente[-4:]
+                else:
+                    consulta['wallet_paciente_corta'] = wallet_paciente
+                    
+        else:
+            consultas = []
+            print(f"Error obteniendo consultas: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error conectando con servicio de datos: {e}")
+        consultas = []
+
+    return render_template('historial_consultas.html', 
+                         consultas=consultas,
+                         wallet_medico=wallet_medico)
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5006)

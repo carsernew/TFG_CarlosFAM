@@ -1,33 +1,69 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Menú Doctores - Portal Salud</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/menu_doctores.css') }}">
 </head>
-
 <body>
-  <div class="container d-flex justify-content-center align-items-center py-5">
-    <div class="card w-100" style="max-width: 500px;">
-      <div class="header text-center">
-        <h2>Portal de Salud</h2>
-        <h5>Sesión activa como Doctor</h5>
-      </div>
+  <div class="medical-indicator">Portal Médico</div>
+  <a href="/logout" class="logout-btn-header">Cerrar Sesión</a>
 
-      <div class="card-body text-center">
-        <div class="d-grid gap-3">
-          <a href="/ver_citas" class="btn btn-outline-primary btn-custom">📋 Citas de pacientes</a>
-          <a href="/actividad_doctores" class="btn btn-outline-success btn-custom">📅 Agendar nueva cita</a>
-          <a href="/ver_historial" class="btn btn-outline-info btn-custom">🩺 Ver historial médico</a>
-          <a href="/logout" class="btn btn-outline-danger btn-custom">🔒 Cerrar sesión</a>
+  <div class="container">
+    <div class="header">
+      <h1>Portal de Salud</h1>
+      <h2>Sesión activa como Doctor</h2>
+      <p>Gestiona tus consultas y pacientes</p>
+    </div>
+
+    <div class="menu-grid">
+      <a href="/ver_citas" class="menu-item appointments">
+        <div class="menu-icon">📋</div>
+        <div class="menu-content">
+          <h3>Citas de pacientes</h3>
+          <p>Consulta y gestiona las citas programadas con tus pacientes</p>
         </div>
+      </a>
+
+      <a href="/historial_consultas" class="menu-item consultations">
+        <div class="menu-icon">📅</div>
+        <div class="menu-content">
+          <h3>Consultas realizadas</h3>
+          <p>Revisa el historial de consultas y seguimiento de pacientes</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-info">
+        <div class="status-dot"></div>
+        <span class="welcome-text">Sistema activo - Sesión segura</span>
       </div>
     </div>
   </div>
 
-  <div class="text-center footer">
-    <p>&copy; 2025 Portal Salud. Todos los derechos reservados.</p>
+  <div class="footer">
+    <p>&copy; 2025 BLOCKMEDCHAIN. Todos los derechos reservados.</p>
   </div>
+
+  <script>
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple-effect');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        this.appendChild(ripple);
+        setTimeout(() => { ripple.remove(); }, 600);
+      });
+    });
+  </script>
 </body>
 </html>
+

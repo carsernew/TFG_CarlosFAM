@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Consultas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/historial_consultas.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Historial de Consultas</h1>
+            <p>Gestión completa de consultas médicas realizadas</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar por paciente, diagnóstico, medicación..." onkeyup="filtrarConsultas()">
+                <select id="fechaFiltro" onchange="filtrarConsultas()">
+                    <option value="">Todas las fechas</option>
+                    <option value="hoy">Hoy</option>
+                    <option value="semana">Esta semana</option>
+                    <option value="mes">Este mes</option>
+                </select>
+                <button class="btn" onclick="limpiarFiltros()">Limpiar</button>
+                <button class="btn" onclick="toggleExpandir()">Expandir Todo</button>
+            </div>
+        </div>
+
+        <div class="consultas-container">
+            <a href="/" class="back-link">← Volver a Citas</a>
+
+            {% if consultas and consultas|length > 0 %}
+                {% for consulta in consultas %}
+                <div class="consulta-card" data-fecha="{{ consulta.datos.fecha_consulta or consulta.resumen.fecha_consulta or '' }}">
+                    <div class="consulta-header" onclick="toggleConsulta(this)">
+                        <div>
+                            <h3>
+                                Consulta - 
+                                {% if consulta.datos.wallet_paciente %}
+                                    <span class="wallet-address">{{ consulta.datos.wallet_paciente[:6] }}...{{ consulta.datos.wallet_paciente[-4:] }}</span>
+                                {% else %}
+                                    Paciente no identificado
+                                {% endif %}
+                            </h3>
+                            <div class="fecha">
+                                📅 {{ consulta.datos.fecha_cita or consulta.resumen.fecha_cita or 'Fecha no disponible' }} 
+                                🕒 {{ consulta.datos.hora_cita or consulta.resumen.hora_cita or 'Hora no disponible' }}
+                            </div>
+                        </div>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+
+                    <div class="consulta-body">
+                        <div class="info-grid">
+                            <!-- Información de la Cita -->
+                            <div class="info-section">
+                                <h4>📅 Información de la Cita</h4>
+                                <div class="info-item">
+                                    <span class="info-label">ID Cita:</span>
+                                    <span class="info-value">{{ consulta.datos.cita_id or consulta.resumen.cita_id or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Fecha:</span>
+                                    <span class="info-value">{{ consulta.datos.fecha_cita or consulta.resumen.fecha_cita or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Hora:</span>
+                                    <span class="info-value">{{ consulta.datos.hora_cita or consulta.resumen.hora_cita or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Fecha Consulta:</span>
+                                    <span class="info-value">{{ consulta.datos.fecha_consulta or consulta.resumen.fecha_consulta or 'N/A' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Información del Paciente -->
+                            <div class="info-section">
+                                <h4>👤 Información del Paciente</h4>
+                                <div class="info-item">
+                                    <span class="info-label">Wallet:</span>
+                                    <span class="info-value">
+                                        {% if consulta.datos.wallet_paciente %}
+                                            <span class="wallet-address">{{ consulta.datos.wallet_paciente }}</span>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Médico:</span>
+                                    <span class="info-value">
+                                        {% if consulta.datos.wallet_medico %}
+                                            <span class="wallet-address">{{ consulta.datos.wallet_medico }}</span>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Información Médica -->
+                            <div class="info-section">
+                                <h4>🏥 Información Médica</h4>
+                                <div class="info-item">
+                                    <span class="info-label">Motivo:</span>
+                                    <span class="info-value">{{ consulta.datos.motivo_consulta or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Diagnóstico:</span>
+                                    <span class="info-value">{{ consulta.datos.diagnostico or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Medicación:</span>
+                                    <span class="info-value">{{ consulta.datos.medicacion or 'N/A' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Observaciones:</span>
+                                    <span class="info-value">{{ consulta.datos.observaciones or 'N/A' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Información Blockchain -->
+                            <div class="info-section">
+                                <h4>⛓️ Información Blockchain</h4>
+                                <div class="info-item">
+                                    <span class="info-label">TX Hash:</span>
+                                    <span class="info-value">
+                                        {% if consulta.datos.tx_hash %}
+                                            <span class="wallet-address">{{ consulta.datos.tx_hash }}</span>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">CID IPFS:</span>
+                                    <span class="info-value">
+                                        {% if consulta.resumen.CID %}
+                                            <span class="wallet-address">{{ consulta.resumen.CID }}</span>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Archivo:</span>
+                                    <span class="info-value">{{ consulta.archivo or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datos JSON Completos -->
+                        <div class="info-section">
+                            <h4>📄 Datos JSON Completos</h4>
+                            <button class="btn" onclick="toggleJson(this)">Mostrar/Ocultar JSON</button>
+                            <div class="json-container" style="display: none;">
+                                <strong>Resumen:</strong>
+                                <pre>{{ consulta.resumen | tojson(indent=2) }}</pre>
+                                <br>
+                                <strong>Datos Completos:</strong>
+                                <pre>{{ consulta.datos | tojson(indent=2) }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-consultas">
+                    <i>📋</i>
+                    <h3>No hay consultas disponibles</h3>
+                    <p>Aún no se han realizado consultas médicas.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleConsulta(header) {
+            const body = header.nextElementSibling;
+            const isActive = body.classList.contains('active');
+            
+            if (isActive) {
+                body.classList.remove('active');
+                header.classList.remove('active');
+            } else {
+                body.classList.add('active');
+                header.classList.add('active');
+            }
+        }
+
+        function toggleJson(button) {
+            const jsonContainer = button.nextElementSibling;
+            const isVisible = jsonContainer.style.display !== 'none';
+            
+            if (isVisible) {
+                jsonContainer.style.display = 'none';
+                button.textContent = 'Mostrar JSON';
+            } else {
+                jsonContainer.style.display = 'block';
+                button.textContent = 'Ocultar JSON';
+                // Colorear el JSON
+                colorearJSON(jsonContainer);
+            }
+        }
+
+        function colorearJSON(container) {
+            const preElements = container.querySelectorAll('pre');
+            preElements.forEach(pre => {
+                let content = pre.textContent;
+                
+                // Colorear diferentes tipos de valores
+                content = content.replace(/"([^"]+)":/g, '<span class="json-key">"$1":</span>');
+                content = content.replace(/"([^"]*)"(?=\s*[,\}\]])/g, '<span class="json-string">"$1"</span>');
+                content = content.replace(/\b(\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
+                content = content.replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>');
+                content = content.replace(/\bnull\b/g, '<span class="json-null">null</span>');
+                
+                pre.innerHTML = content;
+            });
+        }
+
+        function filtrarConsultas() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const fechaFiltro = document.getElementById('fechaFiltro').value;
+            const consultas = document.querySelectorAll('.consulta-card');
+            
+            consultas.forEach(consulta => {
+                const texto = consulta.textContent.toLowerCase();
+                const fecha = consulta.dataset.fecha;
+                
+                let mostrar = true;
+                
+                // Filtro por texto
+                if (searchTerm && !texto.includes(searchTerm)) {
+                    mostrar = false;
+                }
+                
+                // Filtro por fecha
+                if (fechaFiltro && fecha) {
+                    const fechaConsulta = new Date(fecha);
+                    const ahora = new Date();
+                    
+                    switch(fechaFiltro) {
+                        case 'hoy':
+                            if (fechaConsulta.toDateString() !== ahora.toDateString()) {
+                                mostrar = false;
+                            }
+                            break;
+                        case 'semana':
+                            const semanaAtras = new Date(ahora - 7 * 24 * 60 * 60 * 1000);
+                            if (fechaConsulta < semanaAtras) {
+                                mostrar = false;
+                            }
+                            break;
+                        case 'mes':
+                            const mesAtras = new Date(ahora - 30 * 24 * 60 * 60 * 1000);
+                            if (fechaConsulta < mesAtras) {
+                                mostrar = false;
+                            }
+                            break;
+                    }
+                }
+                
+                consulta.style.display = mostrar ? 'block' : 'none';
+            });
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('fechaFiltro').value = '';
+            filtrarConsultas();
+        }
+
+        function toggleExpandir() {
+            const headers = document.querySelectorAll('.consulta-header');
+            const bodies = document.querySelectorAll('.consulta-body');
+            const algunoAbierto = Array.from(bodies).some(body => body.classList.contains('active'));
+            
+            headers.forEach((header, index) => {
+                const body = bodies[index];
+                if (algunoAbierto) {
+                    body.classList.remove('active');
+                    header.classList.remove('active');
+                } else {
+                    body.classList.add('active');
+                    header.classList.add('active');
+                }
+            });
+        }
+
+        // Inicializar filtros al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            filtrarConsultas();
+        });
+    </script>
+</body>
+</html>

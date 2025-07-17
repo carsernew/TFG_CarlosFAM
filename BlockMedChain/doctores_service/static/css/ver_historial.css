@@ -1,23 +1,138 @@
 body {
-    padding: 2rem;
-    background-color: #f7f9fc;
-  }
-  
-  .json-key {
-    font-weight: bold;
-    color: #0d6efd;
-  }
-  
-  .json-value {
-    margin-left: 1rem;
-    color: #212529;
-  }
-  
-  .section {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #fff;
-    border-radius: 0.5rem;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
-  }
-  
+  padding: 2rem;
+  background: linear-gradient(135deg, #a4b3f3 0%, #59eb85 50%, #cfeb83 100%);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: #2c3e50;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Patrón sutil de cruz médica en el fondo */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(0, 150, 136, 0.02) 2px, transparent 2px),
+    radial-gradient(circle at 75px 75px, rgba(46, 125, 50, 0.015) 1px, transparent 1px);
+  background-size: 100px 100px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.json-key {
+  font-weight: 600;
+  color: #00695c;
+  font-size: 0.95em;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.json-key::before {
+  content: '●';
+  color: #26a69a;
+  margin-right: 0.5rem;
+  font-size: 0.8em;
+}
+
+.json-value {
+  margin-left: 1.5rem;
+  color: #37474f;
+  background: rgba(245, 248, 250, 0.6);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border-left: 3px solid #b2dfdb;
+  transition: all 0.2s ease;
+}
+
+.json-value:hover {
+  background: rgba(224, 247, 250, 0.8);
+  border-left-color: #4db6ac;
+  transform: translateX(2px);
+}
+
+.section {
+  margin-bottom: 1.8rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fffe 100%);
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 20px rgba(0, 105, 92, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(178, 223, 219, 0.3);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00695c 0%, #26a69a 50%, #4db6ac 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 30px rgba(0, 105, 92, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Estilos adicionales para elementos médicos */
+.medical-header {
+  background: linear-gradient(135deg, #00695c 0%, #00897b 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 105, 92, 0.2);
+}
+
+.medical-badge {
+  display: inline-block;
+  background: linear-gradient(45deg, #e8f5e8 0%, #f1f8e9 100%);
+  color: #2e7d32;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 500;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  margin: 0.2rem;
+}
+
+.priority-high {
+  border-left: 4px solid #d32f2f;
+  background: linear-gradient(145deg, #ffebee 0%, #fce4ec 100%);
+}
+
+.priority-medium {
+  border-left: 4px solid #f57c00;
+  background: linear-gradient(145deg, #fff3e0 0%, #fce4ec 100%);
+}
+
+.priority-low {
+  border-left: 4px solid #388e3c;
+  background: linear-gradient(145deg, #e8f5e8 0%, #f1f8e9 100%);
+}
+
+/* Animaciones suaves */
+@keyframes pulse-medical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.loading::after {
+  content: '⚕';
+  animation: pulse-medical 1.5s infinite;
+  color: #00695c;
+  margin-left: 0.5rem;
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Guardada - Sistema Médico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/confirmacion_consulta.css') }}">
+</head>
+<body>
+    <div class="user-info">
+        <span class="wallet">{{ usuario_actual[:6] }}...{{ usuario_actual[-4:] }}</span>
+        <span> | Médico</span>
+    </div>
+
+    <div class="container">
+        <div class="success-icon">
+            <div class="checkmark"></div>
+        </div>
+
+        <div class="header">
+            <h1>¡Consulta Guardada Exitosamente!</h1>
+            <p>Los datos de la consulta médica han sido registrados correctamente en el sistema</p>
+        </div>
+
+        <div class="consultation-details">
+            <h3>Detalles de la Consulta</h3>
+
+            <div class="detail-row">
+                <span class="detail-label">ID de Cita:</span>
+                <span class="detail-value">{{ consulta.cita_id }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Paciente:</span>
+                <span class="detail-value">
+                    <span class="wallet-address">{{ consulta.wallet_paciente[:6] }}...{{ consulta.wallet_paciente[-4:] }}</span>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Fecha de Cita:</span>
+                <span class="detail-value">{{ consulta.fecha_cita }} a las {{ consulta.hora_cita }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Médico:</span>
+                <span class="detail-value">
+                    <span class="wallet-address">{{ consulta.wallet_medico[:6] }}...{{ consulta.wallet_medico[-4:] }}</span>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Motivo de Consulta:</span>
+                <span class="detail-value">{{ consulta.motivo_consulta }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Diagnóstico:</span>
+                <span class="detail-value">{{ consulta.diagnostico }}</span>
+            </div>
+
+            {% if consulta.medicacion %}
+            <div class="detail-row">
+                <span class="detail-label">Medicación:</span>
+                <span class="detail-value">{{ consulta.medicacion }}</span>
+            </div>
+            {% endif %}
+
+            {% if consulta.observaciones %}
+            <div class="detail-row">
+                <span class="detail-label">Observaciones:</span>
+                <span class="detail-value">{{ consulta.observaciones }}</span>
+            </div>
+            {% endif %}
+
+            <div class="detail-row">
+                <span class="detail-label">Fecha de Registro:</span>
+                <span class="detail-value">{{ consulta.fecha_consulta }}</span>
+            </div>
+        </div>
+
+        {% if resultado.cid %}
+        <div class="ipfs-info">
+            <h4>Información de Almacenamiento IPFS</h4>
+            <p>La consulta ha sido almacenada de forma segura en IPFS</p>
+            <div class="ipfs-cid">{{ resultado.cid }}</div>
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            <a href="/" class="btn btn-primary">
+                📅 Volver al menú
+            </a>
+            <a href="{{ url_for('ver_citas') }}" class="btn btn-success">
+                📋 Mis Consultas
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('click', function() {
+            clearTimeout(redirectTimer);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(30px)';
+
+            setTimeout(function() {
+                container.style.transition = 'all 0.5s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

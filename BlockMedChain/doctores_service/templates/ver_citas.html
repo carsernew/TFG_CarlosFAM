@@ -1,149 +1,89 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Mis Citas - Portal Salud</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_citas.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Mis Citas - Portal Salud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_citas.css') }}">
 </head>
 <body>
+    <div class="container py-5">
+        <div class="card shadow-sm p-4">
+            <div class="text-center mb-4">
+                <h2>📋 Citas Pacientes</h2>
+                <p class="text-muted">Escoja al paciente que va a atender</p>
+            </div>
 
-<div class="container py-5">
-  <div class="card shadow-sm p-4">
-    <div class="text-center mb-4">
-      <h2>📋 Mis Citas</h2>
-      <p class="text-muted">Estas son tus citas médicas registradas con una de las carteras disponibles</p>
-    </div>
+            <!-- Mensaje de éxito -->
+            {% if request.args.get('mensaje') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Éxito!</strong> {{ request.args.get('mensaje') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
 
-    <!-- Selector de Wallet -->
-    <form method="get" action="{{ url_for('ver_citas') }}" class="mb-4">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <label for="wallet" class="form-label">Selecciona una cartera:</label>
-          <select name="wallet" id="wallet" class="form-select" onchange="this.form.submit()">
-            <option value="">-- Selecciona una wallet --</option>
-            {% for wallet in wallets %}
-              <option value="{{ wallet }}" {% if wallet == wallet_seleccionada %}selected{% endif %}>
-                {{ wallet[:6] }}...{{ wallet[-4:] }}
-              </option>
-            {% endfor %}
-          </select>
+            <!-- Selector de Wallet -->
+            <form method="get" action="{{ url_for('ver_citas') }}" class="mb-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <label for="wallet" class="form-label">Selecciona una cartera:</label>
+                        <select name="wallet" id="wallet" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Selecciona una wallet --</option>
+                            {% for wallet in wallets %}
+                            <option value="{{ wallet }}" {% if wallet == wallet_seleccionada %}selected{% endif %}>
+                                {{ wallet[:6] }}...{{ wallet[-4:] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            {% if citas %}
+            <table class="table table-bordered table-hover text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>📅 Fecha</th>
+                        <th>🕒 Hora</th>
+                        <th>📄 Historial Médico</th>
+                        <th>✅ Empezar Consulta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cita in citas|sort(attribute=1) %}
+                    <tr>
+                        <td>{{ cita[1] }}</td>
+                        <td>{{ cita[2] }}</td>
+                        <td>
+                            <a href="{{ url_for('ver_historial') }}" class="btn btn-sm btn-info">Ver</a>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('nueva_consulta') }}" method="POST">
+                                <input type="hidden" name="cita_id" value="{{ cita[0] }}">
+                                <button class="btn btn-sm btn-success" type="submit">Aceptar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% elif wallet_seleccionada %}
+            <div class="alert alert-warning text-center">
+                No hay citas registradas para esta cartera.
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                Selecciona una cartera para ver sus citas.
+            </div>
+            {% endif %}
+            
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-outline-secondary">⬅ Volver al menú</a>
+            </div>
         </div>
-      </div>
-    </form>
-
-    {% if citas %}
-      <table class="table table-bordered table-hover text-center align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>📅 Fecha</th>
-            <th>🕒 Hora</th>
-            <th>📄 Historial Médico</th>
-            <th>✅ Aceptar</th>
-            <th>🗑️ Cancelar</th>
-          </tr>
-        </thead>
-        <tbody>
-            {% for cita in citas|sort(attribute=1) %}
-            <tr>
-              <td>{{ cita[1] }}</td>
-              <td>{{ cita[2] }}</td>
-              <td>
-                <a href="{{ url_for('ver_historial') }}" class="btn btn-sm btn-info">Ver</a>
-              </td>
-              <td>
-                <form class="aceptar-form" action="/aceptar" method="POST">
-                  <input type="hidden" name="cita_id" value="{{ cita[0] }}">
-                  <input type="hidden" name="tx_hash">
-                  <button class="btn btn-sm btn-success" type="submit">Aceptar</button>
-                </form>
-              </td>
-              <td>
-                <form class="cancelar-form" action="/anular" method="POST">
-                  <input type="hidden" name="cita_id" value="{{ cita[0] }}">
-                  <input type="hidden" name="tx_hash">
-                  <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>
-                </form>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% elif wallet_seleccionada %}
-      <div class="alert alert-warning text-center">
-        No hay citas registradas para esta cartera.
-      </div>
-    {% else %}
-      <div class="alert alert-info text-center">
-        Selecciona una cartera para ver sus citas.
-      </div>
-    {% endif %}
-
-    <div class="text-center mt-4">
-      <a href="/" class="btn btn-outline-secondary">⬅ Volver al menú</a>
     </div>
-  </div>
-</div>
 
-<script>
-  // Contrato para cancelar
-  const contratoCancelar = {
-    address: "0xef3a5995e6dc4344e1bfba250f9b9f779e471b10",
-    abi: [
-      "function setMensaje(string memory _nuevoMensaje) public",
-      "function getMensaje() public view returns (string memory)"
-    ]
-  };
-
-  // Contrato para aceptar
-  const contratoAceptar = {
-    address: "0x69cee04e749c8154449e864f8e3ba583d191d6b8",
-    abi: [
-      "function setMensaje(string memory _nuevoMensaje) public",
-      "function getMensaje() public view returns (string memory)"
-    ]
-  };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const cancelarForms = document.querySelectorAll(".cancelar-form");
-    const aceptarForms = document.querySelectorAll(".aceptar-form");
-
-    function prepararFormulario(form, contratoInfo, mensajeBlockchain) {
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        if (typeof window.ethereum === 'undefined') {
-          alert("Necesitas MetaMask para continuar.");
-          return;
-        }
-
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          const contrato = new ethers.Contract(contratoInfo.address, contratoInfo.abi, signer);
-
-          const tx = await contrato.setMensaje(mensajeBlockchain);
-          await tx.wait();
-
-          const hashInput = form.querySelector('input[name="tx_hash"]');
-          hashInput.value = tx.hash;
-
-          form.submit();
-        } catch (error) {
-          console.error(error);
-          alert("Firma o transacción cancelada.");
-        }
-      });
-    }
-
-    cancelarForms.forEach(form => prepararFormulario(form, contratoCancelar, "Cancelar Cita"));
-    aceptarForms.forEach(form => prepararFormulario(form, contratoAceptar, "Aceptar Cita"));
-  });
-</script>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
